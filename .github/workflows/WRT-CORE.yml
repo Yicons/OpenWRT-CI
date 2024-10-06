@@ -97,18 +97,16 @@ jobs:
 
       - name: Initialization Values
         run: |
-          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
-          export WRT_SpDATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M")
+          # export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M")
           export WRT_CI=$(basename $GITHUB_WORKSPACE)
           export WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 5-)-$WRT_BRANCH
           export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt)
 
           echo "WRT_DATE=$WRT_DATE" >> $GITHUB_ENV
-          echo "WRT_SpDATE=$WRT_SpDATE" >> $GITHUB_ENV
           echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
           echo "WRT_VER=$WRT_VER" >> $GITHUB_ENV
           echo "WRT_TYPE=$WRT_TYPE" >> $GITHUB_ENV
-          echo $WRT_DATE
 
       - name: Clone Code
         run: |
@@ -161,7 +159,7 @@ jobs:
         run: |
           author="${WRT_SOURCE%%/*}"
           # author=$(echo "$author" | awk '{print toupper($0)}')
-          # authorS=$(echo "${author:0:2}" | awk '{print tolower($0)}')
+          authorS=$(echo "${author:0:2}" | awk '{print tolower($0)}')
 
           if [[ $WRT_TARGET == *"X86"* ]]; then
 
@@ -187,7 +185,6 @@ jobs:
             bodyinfo+="$author的源码基于"
 
             if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
-              authorS=vi
               bodyinfo+="immortalwrt合并nss等库"
             elif [[ $WRT_REPO == *"King-Of-Knights"* ]]; then
               authorS=king
@@ -202,8 +199,6 @@ jobs:
           echo "author=$author" >> $GITHUB_ENV
           echo "authorS=$authorS" >> $GITHUB_ENV
           echo "bodyinfo=$bodyinfo" >> $GITHUB_ENV
-          echo $author
-          echo $authorS
           
       - name: Custom Packages
         run: |
@@ -270,8 +265,7 @@ jobs:
         run: |
           cd ./wrt/ && mkdir ./upload/
 
-          # cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
-          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_SpDATE".txt
+          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
           if [[ $WRT_TEST != 'true' ]]; then
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
@@ -281,7 +275,7 @@ jobs:
                 EXT=$(basename $FILE | cut -d '.' -f 2-)
                 NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($TYPE\).*")
                 # NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
-                NEW_FILE="$authorS"_"$WRT_VER"_"$NAME"_"$WRT_SpDATE"."$EXT"
+                NEW_FILE="$authorS"_"$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
                 mv -f $FILE ./upload/$NEW_FILE
               done
             done
@@ -292,7 +286,7 @@ jobs:
       - name: Release Firmware
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{env.author}}_${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_SpDATE}}
+          tag_name: ${{env.author}}_${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
 
