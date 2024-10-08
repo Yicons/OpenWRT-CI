@@ -47,6 +47,9 @@ fi
 if [[ $WRT_REPO == *"lede"* ]]; then
 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "lua"
 	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
+	# SmartDNS
+	UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master"
+	UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "lede"
 else
 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
 fi
