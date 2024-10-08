@@ -171,6 +171,7 @@ jobs:
 
       - name: Source Information
         run: |
+          cd ./wrt/
           VERSION_INFO=$(git show -s --date=short --format="作者: %an<br/>时间: %cd<br/>内容: %s<br/>hash: %H")
           echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
           echo $VERSION_INFO
@@ -311,9 +312,9 @@ jobs:
             ${{env.bodyinfo}}
 
             ### 📒 固件信息
-            - 💻 ${{env.WRT_TYPE}}
-            - 💝 ${{env.WRT_TARGET}}
-            - 🏟️ 固件源码: ${{env.WRT_REPO}}
+            - 💻 平台: ${{env.WRT_TARGET}}
+            - 💝 设备: ${{env.WRT_TYPE}}
+            - 🏟️ 固件源码: [${{env.WRT_SOURCE}}](${{ env.WRT_REPO }})
             - 🧱 源码分支: ${{env.WRT_BRANCH}}
             - 🌐 默认地址: ${{env.WRT_IP}}
             - 🔑 默认密码: ${{env.WRT_PW}}
