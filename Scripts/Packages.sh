@@ -37,8 +37,8 @@ UPDATE_PACKAGE "passwall" "xiaorouji/openwrt-passwall" "main" "pkg"
 UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 UPDATE_PACKAGE "luci-app-wolplus" "VIKINGYFY/luci-app-wolplus" "main"
-UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
 UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
+UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master"
 
 if [[ $WRT_REPO == *"openwrt-6.x"* ]]; then
 	UPDATE_PACKAGE "qmi-wwan" "immortalwrt/wwan-packages" "master" "pkg"
@@ -47,11 +47,12 @@ fi
 if [[ $WRT_REPO == *"lede"* ]]; then
 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "lua"
 	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
-	# SmartDNS
-	UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master"
+	UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5-lua"
 	UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "lede"
 else
 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
+	UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
+	UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "master"
 fi
 
 #更新软件包版本
@@ -93,3 +94,28 @@ UPDATE_VERSION() {
 # UPDATE_VERSION "xray-core" "true"
 UPDATE_VERSION "sing-box"
 UPDATE_VERSION "xray-core"
+
+# # Git稀疏克隆，只克隆指定目录到本地
+# function git_sparse_clone() {
+#   branch="$1" repourl="$2" && shift 2
+#   git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
+#   repodir=$(echo $repourl | awk -F '/' '{print $(NF)}')
+#   cd $repodir && git sparse-checkout set $@
+#   mv -f $@ ../package
+#   cd .. && rm -rf $repodir
+# }
+
+# # iStore
+# git_sparse_clone main https://github.com/linkease/istore-ui app-store-ui
+# git_sparse_clone main https://github.com/linkease/istore luci
+
+# # 晶晨宝盒
+# git_sparse_clone main https://github.com/ophub/luci-app-amlogic luci-app-amlogic
+# sed -i "s|firmware_repo.*|firmware_repo 'https://github.com/haiibo/OpenWrt'|g" package/luci-app-amlogic/root/etc/config/amlogic
+# # sed -i "s|kernel_path.*|kernel_path 'https://github.com/ophub/kernel'|g" package/luci-app-amlogic/root/etc/config/amlogic
+# sed -i "s|ARMv8|ARMv8_PLUS|g" package/luci-app-amlogic/root/etc/config/amlogic
+
+# # 添加额外插件
+# git_sparse_clone main https://github.com/Lienol/openwrt-package luci-app-filebrowser luci-app-ssr-mudb-server
+# git_sparse_clone openwrt-18.06 https://github.com/immortalwrt/luci applications/luci-app-eqos
+# # git_sparse_clone master https://github.com/syb999/openwrt-19.07.1 package/network/services/msd_lite

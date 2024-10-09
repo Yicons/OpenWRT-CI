@@ -22,7 +22,7 @@ if [[ $WRT_REPO == *"lede"* ]]; then
 	#sed -i "s/(\(<%=pcdata(ver.luciversion)%>\))/\1 \/ $WRT_CI-$WRT_DATE/g" $LEDE_FILE
 	sed -i "s/(\(<%=pcdata(ver.luciversion)%>\))/\1 \@ YICloud Build \~ $author \/ $WRT_DATE/g" $LEDE_FILE
 	#mosdns不支持learn
-	echo "CONFIG_PACKAGE_luci-app-mosdns=n" >> ./.config
+	# echo "CONFIG_PACKAGE_luci-app-mosdns=n" >> ./.config
 	#剔除SSR组件
 	echo "CONFIG_PACKAGE_luci-app-ssr-plus=n" >> ./.config
 	# echo "CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_libustream-openssl=n" >> ./.config
@@ -64,8 +64,10 @@ fi
 # 	echo "CONFIG_ATH11K_MEM_PROFILE_512M=y" >> ./.config
 # fi
 
-# #X86插件更改
-# if [[ $WRT_TARGET == *"X86"* ]]; then
-# 	echo "CONFIG_PACKAGE_luci-app-msd_lite=n" >> ./.config
-# 	echo "CONFIG_PACKAGE_luci-app-usb-printer=n" >> ./.config
-# fi
+#高通平台调整
+if [[ $WRT_TARGET == *"IPQ"* ]]; then
+	#取消nss相关feed
+	echo "CONFIG_FEED_nss_packages=n" >> ./.config
+	echo "CONFIG_FEED_sqm_scripts_nss=n" >> ./.config
+fi
+
