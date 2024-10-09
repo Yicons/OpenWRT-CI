@@ -252,6 +252,7 @@ jobs:
           fi
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
+          $GITHUB_WORKSPACE/Scripts/Modify.sh          
 
           make defconfig -j$(nproc)
 
