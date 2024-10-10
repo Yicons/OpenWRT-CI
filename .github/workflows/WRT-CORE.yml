@@ -185,18 +185,16 @@ jobs:
           if [[ $WRT_TARGET == *"X86"* ]]; then
 
             # immortalwrt/immortalwrt, coolsnowwolf/lede, Lienol/openwrt
-            bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 **_"
+            bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 "
             if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
               authorS=coolsnowwolf
               WRT_PW="password"
               echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
-              # bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 , luci_v1.x.x 18.06**_<br><br>"
-              bodyinfo="_**, luci_v1.x.x 18.06**_<br><br>"
+              bodyinfo+=", luci_v1.x.x 18.06**_<br><br>"
               bodyinfo+="$author的源码为luci1版本 , 内核非X86平台更新较慢 , 会打包进闭源的组件"
             elif [[ $WRT_REPO == *"immortalwrt"* ]]; then
               authorS=imm
-              # bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 , luci_v2.x.x master**_<br><br>"
-              bodyinfo+="_**, luci_v2.x.x master**_<br><br>"
+              bodyinfo+=", luci_v2.x.x master**_<br><br>"
               bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
             else
               bodyinfo="<br><br>"

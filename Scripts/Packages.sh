@@ -38,8 +38,6 @@ UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 UPDATE_PACKAGE "luci-app-wolplus" "VIKINGYFY/luci-app-wolplus" "main"
 UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
-UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master"
-# UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "master"
 
 if [[ $WRT_REPO == *"openwrt-6.x"* ]]; then
 	UPDATE_PACKAGE "qmi-wwan" "immortalwrt/wwan-packages" "master" "pkg"
@@ -49,12 +47,10 @@ if [[ $WRT_REPO == *"lede"* ]]; then
 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "lua"
 	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
 	UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5-lua"
-	UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "lede"
 	echo "clede packages updated!"
 else
 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
 	UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
-	UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "master"
 	echo "cimm packages updated!"
 fi
 
