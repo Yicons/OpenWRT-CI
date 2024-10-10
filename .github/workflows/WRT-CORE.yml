@@ -123,6 +123,10 @@ jobs:
 
       - name: Clone Code
         run: |
+          if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+            WRT_BRANCH="master"
+          fi
+          
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
@@ -181,18 +185,21 @@ jobs:
           if [[ $WRT_TARGET == *"X86"* ]]; then
 
             # immortalwrt/immortalwrt, coolsnowwolf/lede, Lienol/openwrt
+            bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 **_"
             if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
               authorS=coolsnowwolf
               WRT_PW="password"
               echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
-              bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 , luci_v1.x.x 18.06**_<br><br>"
+              # bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 , luci_v1.x.x 18.06**_<br><br>"
+              bodyinfo="_**, luci_v1.x.x 18.06**_<br><br>"
               bodyinfo+="$author的源码为luci1版本 , 内核非X86平台更新较慢 , 会打包进闭源的组件"
             elif [[ $WRT_REPO == *"immortalwrt"* ]]; then
               authorS=imm
-              bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 , luci_v2.x.x master**_<br><br>"
+              # bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 , luci_v2.x.x master**_<br><br>"
+              bodyinfo+="_**, luci_v2.x.x master**_<br><br>"
               bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
             else
-              bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码**_<br><br>"
+              bodyinfo="<br><br>"
             fi
 
           else
@@ -209,6 +216,11 @@ jobs:
             elif [[ $WRT_REPO == *"LiBwrt-op"* ]]; then
               authorS=lib
               bodyinfo+="openwrt官方库 , 持续新增更多功能和适配"
+            elif [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+              authorS=coolsnowwolf
+              WRT_PW="password"
+              echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
+              bodyinfo+="luci1_18.06版本 , 内核非更新较慢"
             fi
             
           fi
