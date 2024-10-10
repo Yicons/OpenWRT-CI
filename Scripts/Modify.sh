@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $WRT_REPO != *"lede"* ]]; then
-    # ----------------frpc--------------------
+    # ----------------frpc修改--------------------
     FRPC_FILE="./feeds/packages/net/frp/files/frpc.init"
     FRPP_PATCH="$GITHUB_WORKSPACE/Patch/luci/applications/luci-app-frpc"
     # 不输出日志, 并且删除了日志输出的相关配置参数
@@ -25,5 +25,11 @@ if [[ $WRT_REPO != *"lede"* ]]; then
     # frpc translation
     sed -i 's,frp 服务器,FRP 服务器,g' ./feeds/luci/applications/luci-app-frps/po/zh_Hans/frps.po
     sed -i 's,frp 客户端,FRP 客户端,g' ./feeds/luci/applications/luci-app-frpc/po/zh_Hans/frpc.po
-    # ----------------frpc--------------------
+    # ----------------frpc修改--------------------
+else
+	# 调整 OpenVPN 到 VPN 菜单
+	#sed -i 's/vpn/services/g; s/VPN/Services/g' feeds/luci/applications/luci-app-zerotier/luasrc/controller/zerotier.lua
+    sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/controller/openvpn.lua
+	sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/view/openvpn/pageswitch.htm
 fi
+

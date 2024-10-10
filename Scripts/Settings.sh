@@ -32,9 +32,6 @@ if [[ $WRT_REPO == *"lede"* ]]; then
 	# echo "CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_ChinaDNS_NG=n" >> ./.config
 	# echo "CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_MosDNS=n" >> ./.config
 	# echo "CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Simple_Obfs=n" >> ./.config
-	# 调整 ZeroTier 到 服务 菜单
-	# sed -i 's/vpn/services/g; s/VPN/Services/g' feeds/luci/applications/luci-app-zerotier/luasrc/controller/zerotier.lua
-	# sed -i 's/vpn/services/g' feeds/luci/applications/luci-app-zerotier/luasrc/view/zerotier/zerotier_status.htm
 else
 	#修改immortalwrt.lan关联IP
 	sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
