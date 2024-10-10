@@ -33,7 +33,7 @@ jobs:
       #max-parallel: 3
       matrix:
         TARGET: [JDC-AX1800PRO-WIFI-YES]
-        SOURCE: [King-Of-Knights/openwrt-6.x, VIKINGYFY/immortalwrt, LiBwrt-op/openwrt-6.x]
+        SOURCE: [King-Of-Knights/openwrt-6.x, VIKINGYFY/immortalwrt, LiBwrt-op/openwrt-6.x, coolsnowwolf/lede]
 
     #调用公用编译核心WRT-CORE.yml
     uses: ./.github/workflows/WRT-CORE.yml

@@ -59,7 +59,6 @@ jobs:
     steps:
       - name: Check Server Performance
         run: |
-          echo "警告⚠"
           echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
           echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
           echo "--------------------------CPU信息--------------------------"
@@ -174,7 +173,6 @@ jobs:
           cd ./wrt/
           VERSION_INFO=$(git show -s --date=short --format="作者: %an<br/>时间: %cd<br/>内容: %s<br/>hash: %H")
           echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
-          echo $VERSION_INFO
 
           author="${WRT_SOURCE%%/*}"
           # author=$(echo "$author" | awk '{print toupper($0)}')
@@ -231,20 +229,27 @@ jobs:
           cd ./wrt/
 
           rm -rf ./tmp* ./.config*
+
           if [[ $WRT_TARGET == *"X86"* ]]; then
+
             if [[ $WRT_REPO == *"lede"* ]]; then
               cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-Learn.txt >> .config
-
-              echo "lede config update done!"
+              echo "X86_lede config update done!"
             else
               cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-X86.txt >> .config
-
-              echo "X86 config update done!"
+              echo "X86_Main config update done!"
             fi
-          elif [[ $WRT_TARGET == *"AX1800PRO"* ]]; then
-            cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-AX1800PRO.txt >> .config
 
-            echo "ax1800pro config update done!"
+          elif [[ $WRT_TARGET == *"AX1800PRO"* ]]; then
+
+            if [[ $WRT_REPO == *"lede"* ]]; then
+              cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-AX1800PRO_Learn.txt >> .config
+              echo "ax1800pro_lede config update done!"
+            else
+              cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-AX1800PRO.txt >> .config
+              echo "ax1800pro_Main config update done!"
+            fi
+
           else
             cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
 
