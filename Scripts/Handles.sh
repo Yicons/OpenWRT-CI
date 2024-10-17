@@ -80,12 +80,3 @@ if [ -f "$FW_FILE" ]; then
 
 	cd $PKG_PATCH && echo "freeswitch has been fixed!"
 fi
-
-#替换成最新版的golang
-# if [[ $WRT_REPO != *"lede"* ]]; then
-cd $GITHUB_WORKSPACE/wrt/
-rm -rf feeds/packages/lang/golang
-git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
-cd $PKG_PATCH && echo "golang update done!"
-# fi
-
