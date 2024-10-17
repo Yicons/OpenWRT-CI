@@ -149,6 +149,9 @@ jobs:
         run: |
           cd ./wrt/
 
+          # rm -rf $(find ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "*passwall*" -prune)
+          # echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall" >> ./feeds.conf.default
+
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
