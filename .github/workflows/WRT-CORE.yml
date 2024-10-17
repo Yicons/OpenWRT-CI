@@ -90,6 +90,21 @@ jobs:
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          # 安装最新的GCC（假设为GCC 11）
+          sudo -E apt install gcc-11 g++-11
+
+          # 设置默认版本
+          sudo -E update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
+          sudo -E update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+
+          # 配置默认版本
+          sudo -E update-alternatives --config gcc
+          sudo -E update-alternatives --config g++
+
+          # 验证安装
+          gcc --version
+          g++ --version
+          
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
