@@ -189,12 +189,12 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Custom Packages
-        run: |
-          cd ./wrt/package/
+      # - name: Custom Packages
+      #   run: |
+      #     cd ./wrt/package/
 
-          $GITHUB_WORKSPACE/Scripts/Packages.sh
-          $GITHUB_WORKSPACE/Scripts/Handles.sh
+      #     $GITHUB_WORKSPACE/Scripts/Packages.sh
+      #     $GITHUB_WORKSPACE/Scripts/Handles.sh
 
       - name: Custom Settings
         run: |
@@ -204,7 +204,7 @@ jobs:
 
           cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
 
-          $GITHUB_WORKSPACE/Scripts/Settings.sh
+          # $GITHUB_WORKSPACE/Scripts/Settings.sh
 
           make defconfig -j$(nproc)
 
