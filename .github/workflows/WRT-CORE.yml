@@ -89,13 +89,21 @@ jobs:
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix
-          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo -E apt -yqq install libfuse-dev
+          # sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
+          libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
+          libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
+          python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
+          uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
           # 安装最新的GCC（假设为GCC 11）
-          sudo -E apt install gcc-11 g++-11
+          sudo -E apt install gcc-11 g++-12
 
           # 设置默认版本
-          sudo -E update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
-          sudo -E update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+          sudo -E update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
+          sudo -E update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
 
           # 配置默认版本
           sudo -E update-alternatives --config gcc
@@ -164,8 +172,8 @@ jobs:
         run: |
           cd ./wrt/
 
-          # rm -rf $(find ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "*passwall*" -prune)
-          # echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall" >> ./feeds.conf.default
+          rm -rf $(find ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "*passwall*" -prune)
+          echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall" >> ./feeds.conf.default
 
           ./scripts/feeds update -a
           ./scripts/feeds install -a
