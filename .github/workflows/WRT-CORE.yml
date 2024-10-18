@@ -48,6 +48,7 @@ env:
   WRT_PW: ${{inputs.WRT_PW}}
   WRT_REPO: ${{inputs.WRT_REPO}}
   WRT_BRANCH: ${{inputs.WRT_BRANCH}}
+  WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
 
@@ -56,90 +57,61 @@ jobs:
     name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-22.04
     steps:
-      # - name: Checkout Projects
-      #   uses: actions/checkout@main
+      - name: Check Server Performance
+        run: |
+          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
+          echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
+          echo "--------------------------CPU信息--------------------------"
+          echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
+          echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+          echo "--------------------------内存信息--------------------------"
+          echo "已安装内存详细信息："
+          echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
+          echo "--------------------------硬盘信息--------------------------"
+          echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
 
-      # - name: Free Disk Space
-      #   uses: endersonmenezes/free-disk-space@main
-      #   with:
-      #     remove_android: true
-      #     remove_dotnet: true
-      #     remove_haskell: true
-      #     remove_tool_cache: true
-      #     remove_swap: true
-      #     remove_packages: "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* lld* llvm* \
-      #       microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
-      #     remove_packages_one_command: true
-      #     remove_folders: "/etc/apt/sources.list.d* /etc/mono* /etc/mysql* /usr/include/linux/android* /usr/lib/llvm* /usr/lib/mono* \
-      #       /usr/local/lib/android* /usr/local/lib/node_modules* /usr/local/share/chromium* /usr/local/share/powershell* \
-      #       /usr/local/share/vcpkg/ports/azure* /usr/local/share/vcpkg/ports/google* /usr/local/share/vcpkg/ports/libpq/android* \
-      #       /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
-      #       /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
-      #       /var/lib/mysql* /var/log/azure*"
-      #     testing: false
+      - name: Checkout Projects
+        uses: actions/checkout@main
+
+      - name: Free Disk Space
+        uses: endersonmenezes/free-disk-space@main
+        with:
+          remove_android: true
+          remove_dotnet: true
+          remove_haskell: true
+          remove_tool_cache: true
+          remove_swap: true
+          remove_packages: "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* lld* llvm* \
+            microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
+          remove_packages_one_command: true
+          remove_folders: "/etc/apt/sources.list.d* /etc/mono* /etc/mysql* /usr/include/linux/android* /usr/lib/llvm* /usr/lib/mono* \
+            /usr/local/lib/android* /usr/local/lib/node_modules* /usr/local/share/chromium* /usr/local/share/powershell* \
+            /usr/local/share/vcpkg/ports/azure* /usr/local/share/vcpkg/ports/google* /usr/local/share/vcpkg/ports/libpq/android* \
+            /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
+            /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
+            /var/lib/mysql* /var/log/azure*"
+          testing: false
 
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-
           docker rmi $(docker images -q)
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
-          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y update
-          sudo -E apt-get -y install $(curl -fsSL is.gd/depends_ubuntu_2204)
+          sudo -E apt -yqq update
+          sudo -E apt -yqq full-upgrade
+          sudo -E apt -yqq autoremove --purge
+          sudo -E apt -yqq autoclean
+          sudo -E apt -yqq clean
+          sudo -E apt -yqq install dos2unix
+          sudo -E apt -yqq install libfuse-dev
+          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
           sudo -E systemctl daemon-reload
-          sudo -E apt-get -y autoremove --purge
-          sudo -E apt-get -y clean
           sudo -E timedatectl set-timezone "Asia/Shanghai"
-
-          # docker rmi $(docker images -q)
-          # sudo -E apt -yqq update
-          # sudo -E apt -yqq full-upgrade
-          # sudo -E apt -yqq autoremove --purge
-          # sudo -E apt -yqq autoclean
-          # sudo -E apt -yqq clean
-          # sudo -E apt -yqq install dos2unix
-          # sudo -E apt -yqq install libfuse-dev
-          # # sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          # sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
-          # bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-          # git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
-          # libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
-          # libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
-          # python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
-          # uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-          # # 安装最新的GCC（假设为GCC 11）
-          # sudo -E apt install gcc-11 g++-12
-
-          # # 设置默认版本
-          # sudo -E update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
-          # sudo -E update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
-
-          # # 配置默认版本
-          # sudo -E update-alternatives --config gcc
-          # sudo -E update-alternatives --config g++
-
-          # # 验证安装
-          # gcc --version
-          # g++ --version
-          
-          # sudo -E systemctl daemon-reload
-          # sudo -E timedatectl set-timezone "Asia/Shanghai"
-
-      - name: Combine Disks(合并磁盘)
-        uses: easimon/maximize-build-space@master
-        with:
-          swap-size-mb: 1024
-          temp-reserve-mb: 100
-          root-reserve-mb: 1024
-
-      - name: Checkout
-        uses: actions/checkout@main
 
       - name: Initialization Values
         run: |
-          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          # export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M")
           export WRT_CI=$(basename $GITHUB_WORKSPACE)
           export WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 5-)-$WRT_BRANCH
           export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt)
@@ -151,43 +123,51 @@ jobs:
 
       - name: Clone Code
         run: |
+          if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+            WRT_BRANCH="master"
+          elif [[ $WRT_REPO == *"VIKINGYFY/immortalwrt"* ]]; then
+            if [[ $WRT_TARGET == *"X86"* ]]; then
+              WRT_BRANCH="owrt"
+            fi
+          fi
+          
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-      # - name: Check Scripts
-      #   run: |
-      #     find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+      - name: Check Scripts
+        run: |
+          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
-      # - name: Check Caches
-      #   id: check-cache
-      #   if: env.WRT_TEST != 'true'
-      #   uses: actions/cache@main
-      #   with:
-      #     key: ${{env.WRT_TARGET}}-${{env.WRT_VER}}-${{env.WRT_HASH}}
-      #     path: |
-      #       ./wrt/.ccache
-      #       ./wrt/staging_dir/host*
-      #       ./wrt/staging_dir/tool*
+      - name: Check Caches
+        id: check-cache
+        if: env.WRT_TEST != 'true'
+        uses: actions/cache@main
+        with:
+          key: ${{env.WRT_TARGET}}-${{env.WRT_VER}}-${{env.WRT_HASH}}
+          path: |
+            ./wrt/.ccache
+            ./wrt/staging_dir/host*
+            ./wrt/staging_dir/tool*
 
-      # - name: Update Caches
-      #   if: env.WRT_TEST != 'true'
-      #   run: |
-      #     if ${{steps.check-cache.outputs.cache-hit == 'true'}}; then
-      #       sed -i 's/ $(tool.*\/stamp-compile)//g' ./wrt/Makefile
-      #       sed -i 's/ $(tool.*\/stamp-install)//g' ./wrt/Makefile
+      - name: Update Caches
+        if: env.WRT_TEST != 'true'
+        run: |
+          if ${{steps.check-cache.outputs.cache-hit == 'true'}}; then
+            sed -i 's/ $(tool.*\/stamp-compile)//g' ./wrt/Makefile
+            sed -i 's/ $(tool.*\/stamp-install)//g' ./wrt/Makefile
 
-      #       echo "toolchain skiped done!"
-      #     else
-      #       gh extension install actions/gh-actions-cache
+            echo "toolchain skiped done!"
+          else
+            gh extension install actions/gh-actions-cache
 
-      #       CACHE_LIST=$(gh actions-cache list --key "$WRT_TARGET-$WRT_VER" | cut -f 1)
-      #       for CACHE_KEY in $CACHE_LIST; do
-      #          gh actions-cache delete $CACHE_KEY --confirm
-      #       done
+            CACHE_LIST=$(gh actions-cache list --key "$WRT_TARGET-$WRT_VER" | cut -f 1)
+            for CACHE_KEY in $CACHE_LIST; do
+               gh actions-cache delete $CACHE_KEY --confirm
+            done
 
-      #       echo "caches cleanup done!"
-      #     fi
+            echo "caches cleanup done!"
+          fi
 
       - name: Update Feeds
         run: |
@@ -196,16 +176,70 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-          rm -rf $(find ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "*passwall*" -prune)
-          echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall" >> ./feeds.conf.default
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-      # - name: Custom Packages
-      #   run: |
-      #     cd ./wrt/package/
+      - name: Source Information
+        run: |
+          cd ./wrt/
+          VERSION_INFO=$(git show -s --date=short --format="作者: %an<br/>时间: %cd<br/>内容: %s<br/>hash: %H")
+          echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
 
-      #     $GITHUB_WORKSPACE/Scripts/Packages.sh
-      #     $GITHUB_WORKSPACE/Scripts/Handles.sh
+          author="${WRT_SOURCE%%/*}"
+          # author=$(echo "$author" | awk '{print toupper($0)}')
+          authorS=$(echo "${author:0:2}" | awk '{print tolower($0)}')
+
+          if [[ $WRT_TARGET == *"X86"* ]]; then
+
+            # immortalwrt/immortalwrt, coolsnowwolf/lede, Lienol/openwrt
+            bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码 "
+            if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+              authorS=coolsnowwolf
+              WRT_PW="password"
+              echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
+              bodyinfo+=", luci_v1.x.x 18.06**_<br><br>"
+              bodyinfo+="$author的源码为luci1版本 , 内核非X86平台更新较慢 , 会打包进闭源的组件"
+            elif [[ $WRT_REPO == *"immortalwrt"* ]]; then
+              authorS=imm
+              bodyinfo+=", luci_v2.x.x master**_<br><br>"
+              bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
+            else
+              bodyinfo="<br><br>"
+            fi
+
+          else
+          
+            # VIKINGYFY/immortalwrt, King-Of-Knights/openwrt-6.x, LiBwrt-op/openwrt-6.x, coolsnowwolf/lede
+            bodyinfo="_**JDC-AX1800PRO系列 , $WRT_SOURCE 源码 , 带开源硬件加速<br><br>如固件超60M ，需要先刷入大分区后再刷**_<br><br>"
+            bodyinfo+="$author的源码基于"
+
+            if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
+              bodyinfo+="immortalwrt合并nss等库"
+            elif [[ $WRT_REPO == *"King-Of-Knights"* ]]; then
+              authorS=king
+              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+            elif [[ $WRT_REPO == *"LiBwrt-op"* ]]; then
+              authorS=lib
+              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+            elif [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+              authorS=coolsnowwolf
+              WRT_PW="password"
+              echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
+              bodyinfo+="luci1_18.06版本 , 内核更新较慢"
+            elif [[ $WRT_REPO == *"breeze303"* ]]; then
+              authorS=breeze303
+              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+            fi
+            
+          fi
+          
+          echo "author=$author" >> $GITHUB_ENV
+          echo "authorS=$authorS" >> $GITHUB_ENV
+          echo "bodyinfo=$bodyinfo" >> $GITHUB_ENV
+          
+      - name: Custom Packages
+        run: |
+          cd ./wrt/package/
+
+          $GITHUB_WORKSPACE/Scripts/Packages.sh
+          $GITHUB_WORKSPACE/Scripts/Handles.sh
 
       - name: Custom Settings
         run: |
@@ -213,9 +247,34 @@ jobs:
 
           rm -rf ./tmp* ./.config*
 
-          cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+          if [[ $WRT_TARGET == *"X86"* ]]; then
 
-          # $GITHUB_WORKSPACE/Scripts/Settings.sh
+            if [[ $WRT_REPO == *"lede"* ]]; then
+              cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-Learn.txt >> .config
+              echo "X86_lede config update done!"
+            else
+              cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-X86.txt >> .config
+              echo "X86_Main config update done!"
+            fi
+
+          elif [[ $WRT_TARGET == *"AX1800PRO"* ]]; then
+
+            if [[ $WRT_REPO == *"lede"* ]]; then
+              cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-AX1800PRO_Learn.txt >> .config
+              echo "ax1800pro_lede config update done!"
+            else
+              cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL-AX1800PRO.txt >> .config
+              echo "ax1800pro_Main config update done!"
+            fi
+
+          else
+            cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+
+            echo "general config update done!"
+          fi
+
+          $GITHUB_WORKSPACE/Scripts/Settings.sh
+          $GITHUB_WORKSPACE/Scripts/Modify.sh          
 
           make defconfig -j$(nproc)
 
@@ -230,8 +289,9 @@ jobs:
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-
-          make -j$(nproc) || make -j1 V=s
+          gcc --version
+          g++ --version
+          make -j$(nproc) || make -j1 || make -j1 V=s
 
       - name: Machine Information
         run: |
@@ -249,38 +309,45 @@ jobs:
         run: |
           cd ./wrt/ && mkdir ./upload/
 
-          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
+          cp -f ./.config ./upload/Config_"$author"_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
           if [[ $WRT_TEST != 'true' ]]; then
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
 
             for TYPE in $WRT_TYPE ; do
+              echo "查找"$TYPE
               for FILE in $(find ./bin/targets/ -type f -iname "*$TYPE*.*") ; do
+                echo "查找到原文件"$(basename $FILE)
                 EXT=$(basename $FILE | cut -d '.' -f 2-)
                 NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($TYPE\).*")
-                NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
+                # NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
+                NEW_FILE="$authorS"_"$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
                 mv -f $FILE ./upload/$NEW_FILE
+                echo "更新文件为"$(basename $NEW_FILE)
               done
             done
-
+            
+            find ./bin/targets/ -type f -print
             find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
           fi
+
 
       - name: Release Firmware
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
+          tag_name: ${{env.WRT_TARGET}}_${{env.WRT_SOURCE}}_${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
 
-            MTK和QCA全系带开源硬件加速，别问了！
+            ${{env.bodyinfo}}
 
-            源码：${{env.WRT_REPO}}
-            分支：${{env.WRT_BRANCH}}
-            平台：${{env.WRT_TARGET}}
-            设备：${{env.WRT_TYPE}}
-            地址：${{env.WRT_IP}}
-            密码：${{env.WRT_PW}}
+            ### 📒 固件信息
+            - 💝 平台: ${{env.WRT_TARGET}}
+            - 💻 设备: ${{env.WRT_TYPE}}
+            - 🏟️ 固件源码: [${{env.WRT_SOURCE}}](${{ env.WRT_REPO }})
+            - 🧱 源码分支: ${{env.WRT_BRANCH}}
+            - 🌐 默认地址: ${{env.WRT_IP}}
+            - 🔑 默认密码: ${{env.WRT_PW}}
+
+            ### 🏷️ 更新记录
+            - ${{ env.VERSION_INFO }}
