@@ -82,39 +82,50 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+
           docker rmi $(docker images -q)
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix
-          sudo -E apt -yqq install libfuse-dev
-          # sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
-          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
-          libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
-          libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
-          python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
-          uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-          # 安装最新的GCC（假设为GCC 11）
-          sudo -E apt install gcc-11 g++-12
-
-          # 设置默认版本
-          sudo -E update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
-          sudo -E update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
-
-          # 配置默认版本
-          sudo -E update-alternatives --config gcc
-          sudo -E update-alternatives --config g++
-
-          # 验证安装
-          gcc --version
-          g++ --version
-          
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          sudo -E apt-get -y update
+          sudo -E apt-get -y install $(curl -fsSL is.gd/depends_ubuntu_2204)
           sudo -E systemctl daemon-reload
-          sudo -E timedatectl set-timezone "Asia/Shanghai"
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get -y clean
+          sudo timedatectl set-timezone "$TZ"
+
+          # docker rmi $(docker images -q)
+          # sudo -E apt -yqq update
+          # sudo -E apt -yqq full-upgrade
+          # sudo -E apt -yqq autoremove --purge
+          # sudo -E apt -yqq autoclean
+          # sudo -E apt -yqq clean
+          # sudo -E apt -yqq install dos2unix
+          # sudo -E apt -yqq install libfuse-dev
+          # # sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          # sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+          # bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+          # git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
+          # libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
+          # libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
+          # python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
+          # uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          # # 安装最新的GCC（假设为GCC 11）
+          # sudo -E apt install gcc-11 g++-12
+
+          # # 设置默认版本
+          # sudo -E update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
+          # sudo -E update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
+
+          # # 配置默认版本
+          # sudo -E update-alternatives --config gcc
+          # sudo -E update-alternatives --config g++
+
+          # # 验证安装
+          # gcc --version
+          # g++ --version
+          
+          # sudo -E systemctl daemon-reload
+          # sudo -E timedatectl set-timezone "Asia/Shanghai"
 
       - name: Initialization Values
         run: |
@@ -134,9 +145,9 @@ jobs:
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-      - name: Check Scripts
-        run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+      # - name: Check Scripts
+      #   run: |
+      #     find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
       - name: Check Caches
         id: check-cache
