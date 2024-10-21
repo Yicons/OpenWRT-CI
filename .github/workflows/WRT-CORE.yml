@@ -104,8 +104,6 @@ jobs:
 
       - name: Initialization Values
         run: |
-          # WRT_TARGETLW=$(echo "$WRT_TARGET" | tr '[:upper:]' '[:lower:]')
-
           # export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
           export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M")
           export WRT_CI=$(basename $GITHUB_WORKSPACE)
@@ -177,6 +175,7 @@ jobs:
 
           author="${WRT_SOURCE%%/*}"
           authorS=$(echo "${author:0:2}" | awk '{print tolower($0)}')
+          WRT_TARGETUP=$(echo "$WRT_TARGET" | tr '[:lower:]' '[:upper:]')
 
           if [[ $WRT_TARGET == *"x86"* ]]; then
 
@@ -185,11 +184,12 @@ jobs:
               authorS=coolsnowwolf
               WRT_PW="password"
               echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
-              bodyinfo+=", luci_v1.x.x 18.06**_<br><br>"
-              bodyinfo+="$author的源码为luci1版本 , 内核非X86平台更新较慢 , 会打包进闭源的组件"
+              bodyinfo+=", luci2 R24**_<br><br>"
+              bodyinfo+="$author的源码24_10_17更新为luci2版本 , 各种问题较多近期更新较频繁 , 建议稳定后再更新<br><br>"
+              bodyinfo+="内核非X86平台更新较慢 , 会打包进闭源的组件"
             elif [[ $WRT_REPO == *"immortalwrt"* ]]; then
               authorS=imm
-              bodyinfo+=", luci_v2.x.x master**_<br><br>"
+              bodyinfo+=", luci2 R24**_<br><br>"
               bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
             else
               bodyinfo+="<br><br>"
@@ -198,21 +198,22 @@ jobs:
           else
           
             bodyinfo="_**JDC-AX1800PRO系列 , $WRT_SOURCE 源码 , 带开源硬件加速<br><br>如固件超60M ，需要先刷入大分区后再刷**_<br><br>"
-            bodyinfo+="$author的源码基于"
+            bodyinfo+="$author的源码"
 
             if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
-              bodyinfo+="immortalwrt合并nss等库"
+              bodyinfo+="基于immortalwrt合并nss等库"
             elif [[ $WRT_REPO == *"King-Of-Knights"* ]]; then
               authorS=king
-              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+              bodyinfo+="基于openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
             elif [[ $WRT_REPO == *"LiBwrt-op"* ]]; then
               authorS=lib
-              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+              bodyinfo+="基于openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
             elif [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
               authorS=coolsnowwolf
               WRT_PW="password"
               echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
-              bodyinfo+="luci1_18.06版本 , 内核更新较慢"
+              bodyinfo+="24_10_17更新为luci2版本 , 问题较多近期更新较频繁 , 建议稳定后再更新<br><br>"
+              bodyinfo+="内核更新较慢"
             else
               bodyinfo+="<br><br>"
             fi
@@ -222,6 +223,7 @@ jobs:
           echo "author=$author" >> $GITHUB_ENV
           echo "authorS=$authorS" >> $GITHUB_ENV
           echo "bodyinfo=$bodyinfo" >> $GITHUB_ENV
+          echo "WRT_TARGETUP=$WRT_TARGETUP" >> $GITHUB_ENV    
           
       - name: Custom Packages
         run: |
@@ -236,7 +238,6 @@ jobs:
 
           rm -rf ./tmp* ./.config*
 
-          # SimTARGET=$WRT_TARGETLW
           if [[ $WRT_TARGET == *"ax1800pro"* ]]; then
             SimTARGET="ax1800pro"
           else
@@ -318,14 +319,14 @@ jobs:
       - name: Release Firmware
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{env.WRT_TARGET}}_${{env.WRT_SOURCE}}_${{env.WRT_DATE}}
+          tag_name: ${{env.WRT_TARGETUP}}_${{env.WRT_SOURCE}}_${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
 
             ${{env.bodyinfo}}
 
             ### 📒 固件信息
-            - 💝 平台: ${{env.WRT_TARGET}}
+            - 💝 平台: ${{env.WRT_TARGETUP}}
             - 💻 设备: ${{env.WRT_TYPE}}
             - 🏟️ 固件源码: [${{env.WRT_SOURCE}}](${{ env.WRT_REPO }})
             - 🧱 源码分支: ${{env.WRT_BRANCH}}

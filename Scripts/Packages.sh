@@ -40,25 +40,16 @@ UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 UPDATE_PACKAGE "luci-app-wolplus" "VIKINGYFY/luci-app-wolplus" "main"
 UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
+UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
+UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
 
 if [[ $WRT_REPO != *"immortalwrt"* ]]; then
 	UPDATE_PACKAGE "qmi-wwan" "immortalwrt/wwan-packages" "master" "pkg"
 fi
 
 # if [[ $WRT_REPO == *"lede"* ]]; then
-# 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "lua"
 # 	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
-# 	UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5-lua"
-# else
-# 	UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
-# 	UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
 # fi
-
-UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
-UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
-if [[ $WRT_REPO == *"lede"* ]]; then
-	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
-fi
 
 #更新软件包版本
 UPDATE_VERSION() {
