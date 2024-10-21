@@ -91,6 +91,43 @@ UPDATE_VERSION() {
 UPDATE_VERSION "sing-box"
 UPDATE_VERSION "xray-core"
 
+# function git_sparse_clone() {
+# 	branch="$1"   # 分支名
+# 	repourl="$2"  # 仓库地址
+# 	mvpath="$3"    # 转移地址
+# 	shift 3       # 移动参数，使后续参数是需要稀疏检出的文件夹
+
+# 	# 克隆指定分支的仓库，使用稀疏检出
+# 	git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
+# 	repodir=$(basename "$repourl" .git)  # 提取仓库目录名
+
+# 	# 进入克隆的仓库目录
+# 	cd $repodir
+
+# 	# 检出指定的文件夹
+# 	git sparse-checkout set $@
+
+# 	# if [ -d "$mvpath" ]; then
+# 		# 循环移动所有需要检出的文件夹
+# 		for folder in "$@"; do
+# 			# 提取文件夹名，忽略父目录
+# 			foldername=$(basename "$folder")
+# 			rm -rf $(find ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "*$foldername*" -prune)
+# 			cp -rf $(find ./ -maxdepth 4 -type d -iname "*$foldername*" -prune) $mvpath
+# 		done
+# 	# else
+# 	# 	echo $mvpath"不存在"
+# 	# fi
+
+# 	# 返回上一级目录并删除克隆的仓库目录
+# 	cd .. 
+# 	rm -rf $repodir
+# }
+
+
+# git_sparse_clone master https://github.com/openwrt/packages ../feeds/luci/applications/ net/cloudflared
+# git_sparse_clone master https://github.com/openwrt/luci ../feeds/packages/net/ applications/luci-app-cloudflared
+
 # # Git稀疏克隆，只克隆指定目录到本地
 # function git_sparse_clone() {
 #   branch="$1" repourl="$2" && shift 2
@@ -100,7 +137,6 @@ UPDATE_VERSION "xray-core"
 #   mv -f $@ ../package
 #   cd .. && rm -rf $repodir
 # }
-
 # # iStore
 # git_sparse_clone main https://github.com/linkease/istore-ui app-store-ui
 # git_sparse_clone main https://github.com/linkease/istore luci
