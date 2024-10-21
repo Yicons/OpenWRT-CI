@@ -91,6 +91,46 @@ UPDATE_VERSION() {
 UPDATE_VERSION "sing-box"
 UPDATE_VERSION "xray-core"
 
+# Git稀疏克隆，只克隆指定目录到指定目录
+REPO_PATCH="$GITHUB_WORKSPACE/wrt/"
+function git_sparse_clone() {
+	branch="$1"   # 分支名
+	repourl="$2"  # 仓库地址
+	mvpath="$3"    # 转移地址
+	shift 3       # 移动参数，使后续参数是需要稀疏检出的文件夹
+
+	# 克隆指定分支的仓库，使用稀疏检出
+	git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
+	repodir=$(basename "$repourl" .git)  # 提取仓库目录名
+
+	# 进入克隆的仓库目录
+	cd $repodir
+
+	# 检出指定的文件夹
+	git sparse-checkout set $@
+
+	if [ -d "$REPO_PATCH/$mvpath" ]; then
+		# 循环移动所有需要检出的文件夹
+		for folder in "$@"; do
+			# 提取文件夹名，忽略父目录
+			foldername=$(basename "$folder")
+			rm -rf $(find $REPO_PATCH/feeds/luci/ $REPO_PATCH/feeds/packages/ -maxdepth 3 -type d -iname "*$foldername*" -prune)
+			cp -rf $(find ./ -maxdepth 3 -type d -iname "*$foldername*" -prune) $REPO_PATCH/$mvpath
+			echo "Sparse Update $foldername down!"
+		done
+	else
+		echo $mvpath"不存在"
+	fi
+
+	# 返回上一级目录并删除克隆的仓库目录
+	cd .. 
+	rm -rf $repodir
+}
+
+#git_sparse_clone "分支名" "仓库地址" "转移地址(编译根目录下)" "单/多个需要文件夹的目录"
+git_sparse_clone master https://github.com/openwrt/packages feeds/packages/net/ net/cloudflared net/frp net/ddns-scripts
+git_sparse_clone master https://github.com/openwrt/luci feeds/luci/applications/ applications/luci-app-cloudflared applications/luci-app-frpc applications/luci-app-ddns
+
 # # Git稀疏克隆，只克隆指定目录到本地
 # function git_sparse_clone() {
 #   branch="$1" repourl="$2" && shift 2
