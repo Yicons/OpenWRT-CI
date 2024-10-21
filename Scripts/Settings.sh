@@ -7,7 +7,11 @@ sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/coll
 #修改默认WIFI名
 # sed -i "s/\.ssid=.*/\.ssid=$WRT_WIFI/g" $(find ./package/kernel/mac80211/ ./package/network/config/ -type f -name "mac80211.*")
 
-CFG_FILE="./package/base-files/files/bin/config_generate"
+if [[ $WRT_REPO == *"lede"* ]]; then
+	CFG_FILE="./package/base-files/luci2/bin/config_generate"
+else
+	CFG_FILE="./package/base-files/files/bin/config_generate"
+fi
 #修改默认IP地址
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $CFG_FILE
 #修改默认主机名

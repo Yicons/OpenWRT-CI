@@ -185,12 +185,13 @@ jobs:
               authorS=coolsnowwolf
               WRT_PW="password"
               echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
-              bodyinfo+=", luci_v1.x.x 18.06**_<br><br>"
-              bodyinfo+="$author的源码为luci1版本 , 内核非X86平台更新较慢 , 会打包进闭源的组件"
+              bodyinfo+=", luci2 R24**_<br><br>"
+              bodyinfo+="$author的24_10_17更新为luci2版本 , 各种问题较多近期更新较频繁 , 建议稳定后再更新<br><br>"
+              bodyinfo+="内核非X86平台更新较慢 , 会打包进闭源的组件"
             elif [[ $WRT_REPO == *"immortalwrt"* ]]; then
               authorS=imm
-              bodyinfo+=", luci_v2.x.x master**_<br><br>"
-              bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
+              bodyinfo+=", luci2 R24**_<br><br>"
+              bodyinfo+="$author的为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
             else
               bodyinfo+="<br><br>"
             fi
@@ -198,21 +199,22 @@ jobs:
           else
           
             bodyinfo="_**JDC-AX1800PRO系列 , $WRT_SOURCE 源码 , 带开源硬件加速<br><br>如固件超60M ，需要先刷入大分区后再刷**_<br><br>"
-            bodyinfo+="$author的源码基于"
+            bodyinfo+="$author的源码"
 
             if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
-              bodyinfo+="immortalwrt合并nss等库"
+              bodyinfo+="基于immortalwrt合并nss等库"
             elif [[ $WRT_REPO == *"King-Of-Knights"* ]]; then
               authorS=king
-              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+              bodyinfo+="基于openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
             elif [[ $WRT_REPO == *"LiBwrt-op"* ]]; then
               authorS=lib
-              bodyinfo+="openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+              bodyinfo+="基于openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
             elif [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
               authorS=coolsnowwolf
               WRT_PW="password"
               echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
-              bodyinfo+="luci1_18.06版本 , 内核更新较慢"
+              bodyinfo+="24_10_17更新为luci2版本 , 问题较多近期更新较频繁 , 建议稳定后再更新<br><br>"
+              bodyinfo+="内核更新较慢"
             else
               bodyinfo+="<br><br>"
             fi
