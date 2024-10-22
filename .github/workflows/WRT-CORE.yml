@@ -191,8 +191,11 @@ jobs:
               authorS=imm
               bodyinfo+=", luci2 R24**_<br><br>"
               bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
+            elif [[ $WRT_REPO == *"openwrt/openwrt/"* ]]; then
+              authorS=openwrt
+              bodyinfo+="openwrt 官方源码**_<br><br>"
             else
-              bodyinfo+="<br><br>"
+              bodyinfo+="**_<br><br>"
             fi
 
           else
@@ -254,7 +257,6 @@ jobs:
             echo $SimTARGET"_main config update done!"
           fi
 
-          echo $SimTARGET
           echo "-------config start-------"
           cat .config
           echo "-------config end-------"

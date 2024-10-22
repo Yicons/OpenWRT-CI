@@ -27,8 +27,6 @@ sed -i "/timezone='.*'/a\\\t\t\set system.@system[-1].zonename='Asia/Shanghai'" 
 # 	#添加编译日期标识
 # 	#sed -i "s/(\(<%=pcdata(ver.luciversion)%>\))/\1 \/ $WRT_CI-$WRT_DATE/g" $LEDE_FILE
 # 	sed -i "s/(\(<%=pcdata(ver.luciversion)%>\))/\1 \@ YICloud Build \~ $author \/ $WRT_DATE/g" $LEDE_FILE
-# 	#剔除SSR组件
-# 	echo "CONFIG_PACKAGE_luci-app-ssr-plus=n" >> ./.config
 # else
 # 	#修改immortalwrt.lan关联IP
 # 	sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
@@ -39,17 +37,17 @@ sed -i "/timezone='.*'/a\\\t\t\set system.@system[-1].zonename='Asia/Shanghai'" 
 # 	sed -i "s/(\(luciversion || ''\))/(\1) + (' \@ YICloud Build \~ $author \/ $WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
 # fi
 
-#修改immortalwrt.lan关联IP
+#修改lan关联IP
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
 #添加编译日期标识-
 #sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ $WRT_CI-$WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
 sed -i "s/(\(luciversion || ''\))/(\1) + (' \@ YICloud Build \~ $author \/ $WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
 
 #配置文件修改
-echo "CONFIG_PACKAGE_luci=y" >> ./.config
-echo "CONFIG_LUCI_LANG_zh_Hans=y" >> ./.config
+# echo "CONFIG_PACKAGE_luci=y" >> ./.config
+# echo "CONFIG_LUCI_LANG_zh_Hans=y" >> ./.config
 echo "CONFIG_PACKAGE_luci-theme-$WRT_THEME=y" >> ./.config
-echo "CONFIG_PACKAGE_luci-app-$WRT_THEME-config=y" >> ./.config
+# echo "CONFIG_PACKAGE_luci-app-$WRT_THEME-config=y" >> ./.config
 
 #手动调整的插件
 if [ -n "$WRT_PACKAGE" ]; then
@@ -60,6 +58,7 @@ fi
 # if [[ $WRT_TARGET == *"IPQ"* ]]; then
 if [[ $WRT_TARGET == *"jdc"* ]]; then
 	#取消nss相关feed
+	echo "测试为jdc"
 	echo "CONFIG_FEED_nss_packages=n" >> ./.config
 	echo "CONFIG_FEED_sqm_scripts_nss=n" >> ./.config
 fi

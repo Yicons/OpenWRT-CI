@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "开始预置设置"
-
 PKG_PATCH="$GITHUB_WORKSPACE/wrt/package/"
 
 #预置HomeProxy数据
@@ -84,10 +82,10 @@ if [ -f "$FW_FILE" ]; then
 fi
 
 #替换成最新版的golang
-if [[ $WRT_REPO != *"lede"* ]]; then
-	cd $GITHUB_WORKSPACE/wrt/
-	rm -rf feeds/packages/lang/golang
-	git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
-	cd $PKG_PATCH && echo "golang update done!"
-fi
+# if [[ $WRT_REPO != *"lede"* ]]; then
+cd $GITHUB_WORKSPACE/wrt/
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+cd $PKG_PATCH && echo "golang update done!"
+# fi
 

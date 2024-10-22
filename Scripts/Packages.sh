@@ -42,14 +42,19 @@ UPDATE_PACKAGE "luci-app-wolplus" "VIKINGYFY/luci-app-wolplus" "main"
 UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
 UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
 UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
+UPDATE_PACKAGE "luci-app-socat" "chenmozhijin/luci-app-socat" "main"
+
 
 if [[ $WRT_REPO != *"immortalwrt"* ]]; then
 	UPDATE_PACKAGE "qmi-wwan" "immortalwrt/wwan-packages" "master" "pkg"
 fi
 
-# if [[ $WRT_REPO == *"lede"* ]]; then
-# 	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
-# fi
+if [[ $WRT_REPO == *"lede"* || $WRT_REPO == *"openwrt/openwrt"* ]]; then
+	# rm -rf ../feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box}
+	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
+	# git_sparse_clone master https://github.com/immortalwrt/packages feeds/packages/net/ net/ddns-go
+	# git_sparse_clone master https://github.com/immortalwrt/luci feeds/luci/applications/ applications/luci-app-ddns-go
+fi
 
 #更新软件包版本
 UPDATE_VERSION() {
@@ -128,8 +133,13 @@ function git_sparse_clone() {
 }
 
 #git_sparse_clone "分支名" "仓库地址" "转移地址(编译根目录下)" "单/多个需要文件夹的目录"
-git_sparse_clone master https://github.com/openwrt/packages feeds/packages/net/ net/cloudflared net/frp net/ddns-scripts
-git_sparse_clone master https://github.com/openwrt/luci feeds/luci/applications/ applications/luci-app-cloudflared applications/luci-app-frpc applications/luci-app-ddns
+git_sparse_clone master https://github.com/openwrt/packages feeds/packages/net/ net/cloudflared net/frp
+git_sparse_clone master https://github.com/openwrt/luci feeds/luci/applications/ applications/luci-app-cloudflared applications/luci-app-frpc
+
+if [[ $WRT_REPO == *"lede"* ]]; then
+	git_sparse_clone master https://github.com/openwrt/luci feeds/luci/applications/ applications/luci-app-samba4
+	git_sparse_clone master https://github.com/openwrt/packages feeds/packages/net/ net/samba4
+fi
 
 # # Git稀疏克隆，只克隆指定目录到本地
 # function git_sparse_clone() {
