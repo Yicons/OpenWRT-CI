@@ -4,6 +4,18 @@ echo "开始自定义页面"
 
 PATCH_DIR="$GITHUB_WORKSPACE/Patch"
 
+# NTP
+sed -i 's/0.openwrt.pool.ntp.org/ntp1.aliyun.com/g' package/base-files/files/bin/config_generate
+sed -i 's/1.openwrt.pool.ntp.org/ntp2.aliyun.com/g' package/base-files/files/bin/config_generate
+sed -i 's/2.openwrt.pool.ntp.org/time1.cloud.tencent.com/g' package/base-files/files/bin/config_generate
+sed -i 's/3.openwrt.pool.ntp.org/time2.cloud.tencent.com/g' package/base-files/files/bin/config_generate
+
+# TTYD
+sed -i 's/services/system/g' feeds/luci/applications/luci-app-ttyd/root/usr/share/luci/menu.d/luci-app-ttyd.json
+sed -i '3 a\\t\t"order": 50,' feeds/luci/applications/luci-app-ttyd/root/usr/share/luci/menu.d/luci-app-ttyd.json
+sed -i 's/procd_set_param stdout 1/procd_set_param stdout 0/g' feeds/packages/utils/ttyd/files/ttyd.init
+sed -i 's/procd_set_param stderr 1/procd_set_param stderr 0/g' feeds/packages/utils/ttyd/files/ttyd.ini
+
 # ----------------frpc修改--------------------
 FRPC_FILE="./feeds/packages/net/frp/files/frpc.init"
 # 不输出日志, 并且删除了日志输出的相关配置参数
@@ -23,24 +35,28 @@ patch -p1 < $PATCH_DIR/frpc/001-luci-app-frpc-hide-token-openwrt-24.10.patch
 # 可以通过 Web 界面启用或禁用 frpc 服务
 # 强制 respawn 默认开启，确保服务在崩溃时能够自动重启
 patch -p1 < $PATCH_DIR/frpc/002-luci-app-frpc-add-enable-flag-openwrt-24.10.patch
-
 # frpc translation
 sed -i 's,frp 服务器,FRP 服务器,g' ./feeds/luci/applications/luci-app-frps/po/zh_Hans/frps.po
 sed -i 's,frp 客户端,FRP 客户端,g' ./feeds/luci/applications/luci-app-frpc/po/zh_Hans/frpc.po
 
-echo "FRPC Modify down!"
-# ----------------frpc修改--------------------
+# WOLPLUS
+patch -p1 < $PATCH_DIR/wolplus/001-luci-app-wolplus-edit-po.patch
 
-# ddns - fix boot
+# DDNS - fix boot
 sed -i '/boot()/,+2d' feeds/packages/net/ddns-scripts/files/etc/init.d/ddns
 
-echo "ddns Modify down!"
+# watchcat - clean config
+true > feeds/packages/utils/watchcat/files/watchcat.config
 
-if [[ $WRT_REPO = *"lede"* ]]; then
-	# 调整 OpenVPN 到 VPN 菜单
-	#sed -i 's/vpn/services/g; s/VPN/Services/g' feeds/luci/applications/luci-app-zerotier/luasrc/controller/zerotier.lua
-    sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/controller/openvpn.lua
-	sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/view/openvpn/pageswitch.htm
-    echo "OpenVPN Modify down!"
-fi
+# nlbwmon
+sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/luci-app-nlbwmon.json
+sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
+
+# if [[ $WRT_REPO = *"lede"* ]]; then
+# 	# 调整 OpenVPN 到 VPN 菜单
+# 	#sed -i 's/vpn/services/g; s/VPN/Services/g' feeds/luci/applications/luci-app-zerotier/luasrc/controller/zerotier.lua
+#     sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/controller/openvpn.lua
+# 	sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/view/openvpn/pageswitch.htm
+#     echo "OpenVPN Modify down!"
+# fi
 
