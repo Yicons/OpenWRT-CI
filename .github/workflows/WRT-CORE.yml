@@ -163,7 +163,10 @@ jobs:
       - name: Update Feeds
         run: |
           cd ./wrt/
-
+          if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
+            rm -rf ./feeds.conf.default
+            cat $GITHUB_WORKSPACE/Feeds/feeds.conf.default >> ./feeds.conf.default
+          fi
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 

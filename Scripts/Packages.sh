@@ -116,6 +116,7 @@ function git_sparse_clone() {
 			cp -rf $(find ./ -maxdepth 3 -type d -iname "*$foldername*" -prune) $REPO_PATCH/$mvpath
 			echo "Sparse Update $foldername down!"
 		done
+		ls -l "$REPO_PATCH/$mvpath"
 	else
 		echo $mvpath"不存在"
 	fi
@@ -128,8 +129,10 @@ function git_sparse_clone() {
 #git_sparse_clone "分支名" "仓库地址" "转移地址(编译根目录下)" "单/多个需要文件夹的目录"
 
 if [[ $WRT_REPO == *"lede"* || $WRT_REPO == *"openwrt/openwrt"* ]]; then
-	git_sparse_clone master https://github.com/immortalwrt/packages feeds/packages/net/ net/ddns-go net/msd_lite
-	git_sparse_clone master https://github.com/immortalwrt/luci feeds/luci/applications/ applications/luci-app-ddns-go applications/luci-app-autoreboot applications/luci-app-zerotier applications/luci-app-msd_lite
+	# net/ddns-go 
+	# applications/luci-app-ddns-go applications/luci-app-autoreboot applications/luci-app-zerotier
+	git_sparse_clone master https://github.com/immortalwrt/packages feeds/packages/net/ net/msd_lite
+	git_sparse_clone master https://github.com/immortalwrt/luci feeds/luci/applications/ applications/luci-app-msd_lite
 fi
 
 if [[ $WRT_REPO == *"lede"* ]]; then
