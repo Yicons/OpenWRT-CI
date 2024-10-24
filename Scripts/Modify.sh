@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# diff -u original new > 1.patch
+
 PATCH_DIR="$GITHUB_WORKSPACE/Patch"
 
 # TTYD
@@ -51,6 +53,8 @@ true > feeds/packages/utils/watchcat/files/watchcat.config
 #     sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
 # fi
 
+# 调整VPN菜单顺序
+patch -p1 < $PATCH_DIR/luci-base/002-luci-base-change-order-add-nas.patch
 
 # samba4
 if [[ $WRT_REPO == *"lede"* || $WRT_REPO == *"openwrt/openwrt"* ]]; then
