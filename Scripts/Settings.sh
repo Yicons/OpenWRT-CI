@@ -58,7 +58,6 @@ fi
 # if [[ $WRT_TARGET == *"IPQ"* ]]; then
 if [[ $WRT_TARGET == *"jdc"* ]]; then
 	#取消nss相关feed
-	echo "测试为jdc"
 	echo "CONFIG_FEED_nss_packages=n" >> ./.config
 	echo "CONFIG_FEED_sqm_scripts_nss=n" >> ./.config
 fi

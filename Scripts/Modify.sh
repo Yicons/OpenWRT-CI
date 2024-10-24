@@ -66,7 +66,7 @@ if [[ $WRT_REPO = *"openwrt/openwrt"* ]]; then
 	# sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-openvpn/luasrc/view/openvpn/pageswitch.htm
     # NTP
     sed -i 's/0.openwrt.pool.ntp.org/ntp1.aliyun.com/g' package/base-files/files/bin/config_generate
-    sed -i 's/1.openwrt.pool.ntp.org/ntp2.aliyun.com/g' package/base-files/files/bin/config_generate
+    sed -i 's/1.openwrt.pool.ntp.org/time1.apple.com/g' package/base-files/files/bin/config_generate
     sed -i 's/2.openwrt.pool.ntp.org/time1.cloud.tencent.com/g' package/base-files/files/bin/config_generate
-    sed -i 's/3.openwrt.pool.ntp.org/time2.cloud.tencent.com/g' package/base-files/files/bin/config_generate
+    sed -i 's/3.openwrt.pool.ntp.org/time.cloudflare.com/g' package/base-files/files/bin/config_generate
 fi

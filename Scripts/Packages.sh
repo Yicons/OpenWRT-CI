@@ -50,10 +50,10 @@ if [[ $WRT_REPO != *"immortalwrt"* ]]; then
 fi
 
 if [[ $WRT_REPO == *"lede"* || $WRT_REPO == *"openwrt/openwrt"* ]]; then
-	# rm -rf ../feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box}
 	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
-	# git_sparse_clone master https://github.com/immortalwrt/packages feeds/packages/net/ net/ddns-go
-	# git_sparse_clone master https://github.com/immortalwrt/luci feeds/luci/applications/ applications/luci-app-ddns-go
+
+	git_sparse_clone master https://github.com/immortalwrt/packages feeds/packages/net/ net/ddns-go
+	git_sparse_clone master https://github.com/immortalwrt/luci feeds/luci/applications/ applications/luci-app-ddns-go applications/luci-app-autoreboot
 fi
 
 #更新软件包版本
