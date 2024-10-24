@@ -44,12 +44,12 @@ sed -i 's/services/vpn/g' package/luci-app-tailscale/root/usr/share/luci/menu.d/
 true > feeds/packages/utils/watchcat/files/watchcat.config
 
 ## nlbwmon
-if grep -q "CONFIG_PACKAGE_firewall4=n" ./.config; then
-    echo "firewall可配置nlbwmon"
-    echo "CONFIG_PACKAGE_luci-app-nlbwmon=y" >> ./.config
-    sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/luci-app-nlbwmon.json
-    sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
-fi
+# if grep -q "CONFIG_PACKAGE_firewall4=n" ./.config; then
+#     echo "firewall可配置nlbwmon"
+#     echo "CONFIG_PACKAGE_luci-app-nlbwmon=y" >> ./.config
+#     sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/luci-app-nlbwmon.json
+#     sed -i 's/services/network/g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
+# fi
 
 
 # samba4

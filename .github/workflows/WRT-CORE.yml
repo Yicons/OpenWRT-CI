@@ -193,7 +193,7 @@ jobs:
               bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
             elif [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
               authorS="official"
-              bodyinfo+="**_<br><br>openwrt 原版源码"
+              bodyinfo+="**_<br><br>openwrt 原版"
             else
               bodyinfo+="**_<br><br>"
             fi
