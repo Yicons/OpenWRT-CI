@@ -48,6 +48,7 @@ env:
   WRT_PW: ${{inputs.WRT_PW}}
   WRT_REPO: ${{inputs.WRT_REPO}}
   WRT_BRANCH: ${{inputs.WRT_BRANCH}}
+  WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
 
@@ -89,17 +90,27 @@ jobs:
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix
+          sudo -E apt -yqq install libfuse-dev
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          # sudo -E apt-get -y install $(curl -fsSL is.gd/depends_ubuntu_2204)
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
+          
+          # clang版本降级
+          sudo -E apt -yqq remove --purge clang
+          sudo -E apt -yqq autoremove
+          sudo -E apt -yqq install clang
+          clang++ --version
 
       - name: Initialization Values
         run: |
-          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          # export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M")
           export WRT_CI=$(basename $GITHUB_WORKSPACE)
           export WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 5-)-$WRT_BRANCH
-          export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt)
-
+          # export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt)
+          export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/base/config-sys-"$WRT_TARGET")
+          
           echo "WRT_DATE=$WRT_DATE" >> $GITHUB_ENV
           echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
           echo "WRT_VER=$WRT_VER" >> $GITHUB_ENV
@@ -107,6 +118,10 @@ jobs:
 
       - name: Clone Code
         run: |
+          if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+            WRT_BRANCH="master"
+          fi
+          
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
@@ -152,6 +167,68 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Source Information
+        run: |
+          cd ./wrt/
+
+          VERSION_INFO=$(git show -s --date=short --format="作者: %an<br/>时间: %cd<br/>内容: %s<br/>hash: %H")
+          echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
+
+          author="${WRT_SOURCE%%/*}"
+          authorS=$(echo "${author:0:2}" | awk '{print tolower($0)}')
+          WRT_TARGETUP=$(echo "$WRT_TARGET" | tr '[:lower:]' '[:upper:]')
+
+          if [[ $WRT_TARGET == *"x86"* ]]; then
+
+            bodyinfo="_**X86_64系列 , $WRT_SOURCE 源码"
+            if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+              authorS="coolsnowwolf"
+              WRT_PW="password"
+              echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
+              bodyinfo+=" , luci2 R24**_<br><br>"
+              bodyinfo+="$author的源码24_10_17更新为luci2版本 , 各种问题较多近期更新较频繁 , 建议稳定后再更新<br><br>"
+              bodyinfo+="内核非X86平台更新较慢 , 会打包进闭源的组件"
+            elif [[ $WRT_REPO == *"immortalwrt"* ]]; then
+              authorS="imm"
+              bodyinfo+=" , luci2 R24**_<br><br>"
+              bodyinfo+="$author的源码为luci2版本 , 内核同步更新 , 基本是开源的 , 主要针对国人用户开发"
+            elif [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
+              authorS="official"
+              bodyinfo+="**_<br><br>openwrt 原版"
+            else
+              bodyinfo+="**_<br><br>"
+            fi
+
+          else
+          
+            bodyinfo="_**JDC-AX1800PRO系列 , $WRT_SOURCE 源码 , 带开源硬件加速<br><br>如固件超60M ，需要先刷入大分区后再刷**_<br><br>"
+            bodyinfo+="$author的源码"
+
+            if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
+              bodyinfo+="基于immortalwrt合并nss等库"
+            elif [[ $WRT_REPO == *"King-Of-Knights"* ]]; then
+              authorS=king
+              bodyinfo+="基于openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+            elif [[ $WRT_REPO == *"LiBwrt-op"* ]]; then
+              authorS=lib
+              bodyinfo+="基于openwrt官方库 , 集成 Qualcomm 的 NSS , immortalwrt插件库"
+            elif [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
+              authorS=coolsnowwolf
+              WRT_PW="password"
+              echo "WRT_PW=$WRT_PW" >> $GITHUB_ENV
+              bodyinfo+="24_10_17更新为luci2版本 , 问题较多近期更新较频繁 , 建议稳定后再更新<br><br>"
+              bodyinfo+="内核更新较慢"
+            else
+              bodyinfo+="<br><br>"
+            fi
+            
+          fi
+          
+          echo "author=$author" >> $GITHUB_ENV
+          echo "authorS=$authorS" >> $GITHUB_ENV
+          echo "bodyinfo=$bodyinfo" >> $GITHUB_ENV
+          echo "WRT_TARGETUP=$WRT_TARGETUP" >> $GITHUB_ENV    
+          
       - name: Custom Packages
         run: |
           cd ./wrt/package/
@@ -165,9 +242,24 @@ jobs:
 
           rm -rf ./tmp* ./.config*
 
-          cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+          if [[ $WRT_TARGET == *"ax1800pro"* ]]; then
+            SimTARGET="ax1800pro"
+          else
+            SimTARGET=$WRT_TARGET
+          fi
+
+          cat $GITHUB_WORKSPACE/Config/base/config-sys-"$WRT_TARGET" $GITHUB_WORKSPACE/Config/base/config-common >> .config
+
+          if [[ $WRT_REPO == *"lede"* ]]; then
+            cat $GITHUB_WORKSPACE/Config/base/config-app-"$SimTARGET"_learn >> .config
+            echo $SimTARGET"_lede config update done!"
+          else
+            cat $GITHUB_WORKSPACE/Config/base/config-app-"$SimTARGET"_main >> .config
+            echo $SimTARGET"_main config update done!"
+          fi
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
+          $GITHUB_WORKSPACE/Scripts/Modify.sh          
 
           make defconfig -j$(nproc)
 
@@ -201,38 +293,45 @@ jobs:
         run: |
           cd ./wrt/ && mkdir ./upload/
 
-          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
+          cp -f ./.config ./upload/Config_"$author"_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
           if [[ $WRT_TEST != 'true' ]]; then
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
 
             for TYPE in $WRT_TYPE ; do
+              echo "查找"$TYPE
               for FILE in $(find ./bin/targets/ -type f -iname "*$TYPE*.*") ; do
+                echo "查找到原文件"$(basename $FILE)
                 EXT=$(basename $FILE | cut -d '.' -f 2-)
                 NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($TYPE\).*")
-                NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
+                # NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
+                NEW_FILE="$authorS"_"$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
                 mv -f $FILE ./upload/$NEW_FILE
+                echo "更新文件为"$(basename $NEW_FILE)
               done
             done
-
+            
+            find ./bin/targets/ -type f -print
             find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
           fi
+
 
       - name: Release Firmware
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
+          tag_name: ${{env.WRT_TARGETUP}}_${{env.WRT_SOURCE}}_${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
 
-            MTK和QCA全系带开源硬件加速，别问了！
+            ${{env.bodyinfo}}
 
-            源码：${{env.WRT_REPO}}
-            分支：${{env.WRT_BRANCH}}
-            平台：${{env.WRT_TARGET}}
-            设备：${{env.WRT_TYPE}}
-            地址：${{env.WRT_IP}}
-            密码：${{env.WRT_PW}}
+            ### 📒 固件信息
+            - 💝 平台: ${{env.WRT_TARGETUP}}
+            - 💻 设备: ${{env.WRT_TYPE}}
+            - 🏟️ 固件源码: [${{env.WRT_SOURCE}}](${{ env.WRT_REPO }})
+            - 🧱 源码分支: ${{env.WRT_BRANCH}}
+            - 🌐 默认地址: ${{env.WRT_IP}}
+            - 🔑 默认密码: ${{env.WRT_PW}}
+
+            ### 🏷️ 更新记录
+            - ${{ env.VERSION_INFO }}
