@@ -1,5 +1,8 @@
+# 插件兼容较差，以后更新
+CONFIG_USE_APK=n
 #通用
 #增加通用插件
+CONFIG_PACKAGE_luci-app-cpufreq=y
 CONFIG_PACKAGE_luci-app-autoreboot=y
 CONFIG_PACKAGE_luci-app-frpc=y
 CONFIG_PACKAGE_luci-app-samba4=y
@@ -99,7 +102,7 @@ CONFIG_PACKAGE_cgdisk=n
 CONFIG_PACKAGE_fdisk=y
 CONFIG_PACKAGE_gdisk=y
 CONFIG_PACKAGE_sfdisk=n
-CONFIG_PACKAGE_sgdisk=n
+CONFIG_PACKAGE_sgdisk=y
 CONFIG_PACKAGE_ip-full=y
 CONFIG_PACKAGE_ipv6helper=y
 CONFIG_PACKAGE_ip6tables=y
@@ -114,4 +117,10 @@ CONFIG_PACKAGE_luci-lib-ipkg=y
 CONFIG_PACKAGE_luci-lua-runtime=y
 CONFIG_PACKAGE_wpad-openssl=y
 CONFIG_PACKAGE_nano=y
+CONFIG_PACKAGE_autocore=y
+CONFIG_PACKAGE_autocore-arm=y
 CONFIG_PACKAGE_luci-proto-wireguard=y
+CONFIG_PACKAGE_luci-app-filemanager=y
+CONFIG_PACKAGE_coremark=y
+CONFIG_PACKAGE_blkid=y
+CONFIG_PACKAGE_lsblk=y

@@ -30,32 +30,31 @@ UPDATE_PACKAGE "homeproxy" "immortalwrt/homeproxy" "master"
 #UPDATE_PACKAGE "mihomo" "morytyann/OpenWrt-mihomo" "main"
 #UPDATE_PACKAGE "nekoclash" "Thaolga/luci-app-nekoclash" "main"
 #UPDATE_PACKAGE "ssr-plus" "fw876/helloworld" "master"
-UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
+# UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 UPDATE_PACKAGE "passwall" "xiaorouji/openwrt-passwall" "main" "pkg"
 
-#UPDATE_PACKAGE "luci-app-advancedplus" "VIKINGYFY/luci-app-advancedplus" "main"
+# UPDATE_PACKAGE "vnt" "lazyoop/networking-artifact" "main" "pkg"
+# UPDATE_PACKAGE "easytier" "lazyoop/networking-artifact" "main" "pkg"
 UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
-UPDATE_PACKAGE "luci-app-wolplus" "VIKINGYFY/luci-app-wolplus" "main"
-# UPDATE_PACKAGE "easytier" "lazyoop/networking-artifact" "main" "pkg"
-# UPDATE_PACKAGE "vnt" "lazyoop/networking-artifact" "main" "pkg"
-# UPDATE_PACKAGE "luci-app-easytier" "EasyTier/luci-app-easytier" "main"
-# UPDATE_PACKAGE "luci-app-vnt" "lmq8267/luci-app-vnt" "main" "pkg"
-UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
+
+# UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
 UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
 UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
 UPDATE_PACKAGE "luci-app-socat" "chenmozhijin/luci-app-socat" "main"
+UPDATE_PACKAGE "luci-app-filemanager" "sbwml/luci-app-filemanager" "main"
 
 if [[ $WRT_REPO != *"immortalwrt"* ]]; then
 	UPDATE_PACKAGE "qmi-wwan" "immortalwrt/wwan-packages" "master" "pkg"
 fi
 
-if [[ $WRT_REPO == *"lede"* || $WRT_REPO == *"openwrt/openwrt"* ]]; then
-	UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
-	if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
-		UPDATE_PACKAGE "autocore-arm" "sbwml/autocore-arm" "openwrt-24.10"
-	fi
+UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
+# if [[ $WRT_REPO == *"lede"* || $WRT_REPO == *"openwrt/openwrt"* ]]; then
+	
+if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
+	UPDATE_PACKAGE "autocore-arm" "sbwml/autocore-arm" "openwrt-24.10"
 fi
+# fi
 
 #更新软件包版本
 UPDATE_VERSION() {
@@ -92,10 +91,9 @@ UPDATE_VERSION() {
 }
 
 #UPDATE_VERSION "软件包名" "测试版，true，可选，默认为否"
-# UPDATE_VERSION "sing-box" "true"
-# UPDATE_VERSION "xray-core" "true"
 UPDATE_VERSION "sing-box"
 UPDATE_VERSION "xray-core"
+UPDATE_VERSION "tailscale"
 
 # Git稀疏克隆，只克隆指定目录到指定目录
 REPO_PATCH="$GITHUB_WORKSPACE/wrt/"
@@ -140,20 +138,22 @@ function git_sparse_clone() {
 }
 
 #git_sparse_clone "分支名" "仓库地址" "转移地址(编译根目录下)" "单/多个需要文件夹的目录"
+git_sparse_clone main https://github.com/VIKINGYFY/packages package/ luci-app-wolplus
+
 if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
 	git_sparse_clone master https://github.com/immortalwrt/packages package/ net/zerotier net/ddns-go
 	git_sparse_clone master https://github.com/immortalwrt/luci package/ applications/luci-app-zerotier applications/luci-app-ddns-go applications/luci-app-autoreboot
 fi
 
-if [[ $WRT_REPO == *"lede"* ]]; then
-	# rm -rf $(find $REPO_PATCH/package/ -maxdepth 3 -type d -iname "*ddns-scripts*" -prune)
-	# net/frp applications/luci-app-frpc net/ddns-scripts applications/luci-app-ddns net/samba4 applications/luci-app-samba4
-	git_sparse_clone master https://github.com/openwrt/packages feeds/packages/net/ net/cloudflared 
-	git_sparse_clone master https://github.com/openwrt/luci package/ applications/luci-app-cloudflared 
+# if [[ $WRT_REPO == *"lede"* ]]; then
+# 	# rm -rf $(find $REPO_PATCH/package/ -maxdepth 3 -type d -iname "*ddns-scripts*" -prune)
+# 	# net/frp applications/luci-app-frpc net/ddns-scripts applications/luci-app-ddns net/samba4 applications/luci-app-samba4
+# 	git_sparse_clone master https://github.com/openwrt/packages feeds/packages/net/ net/cloudflared 
+# 	git_sparse_clone master https://github.com/openwrt/luci package/ applications/luci-app-cloudflared 
 
-	git_sparse_clone master https://github.com/immortalwrt/packages package/ net/msd_lite
-	git_sparse_clone master https://github.com/immortalwrt/luci package/ applications/luci-app-msd_lite
-fi
+# 	git_sparse_clone master https://github.com/immortalwrt/packages package/ net/msd_lite
+# 	git_sparse_clone master https://github.com/immortalwrt/luci package/ applications/luci-app-msd_lite
+# fi
 
 # # iStore
 # git_sparse_clone main https://github.com/linkease/istore-ui app-store-ui

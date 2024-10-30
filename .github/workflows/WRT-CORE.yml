@@ -120,6 +120,8 @@ jobs:
         run: |
           if [[ $WRT_REPO == *"coolsnowwolf"* ]]; then
             WRT_BRANCH="master"
+          elif [[ $WRT_REPO == *"LiBwrt-op"* ]]; then
+            WRT_BRANCH="openwrt-24.10"
           fi
           
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
@@ -202,6 +204,7 @@ jobs:
           else
           
             bodyinfo="_**JDC-AX1800PRO系列 , $WRT_SOURCE 源码 , 带开源硬件加速<br><br>如固件超60M ，需要先刷入大分区后再刷**_<br><br>"
+            bodyinfo+="jdcloud_ax1800-pro / jdcloud_re-ss-01 亚瑟<br>jdcloud_re-cs-02 雅典娜<br>jdcloud_re-cs-07 太乙<br><br>"
             bodyinfo+="$author的源码"
 
             if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
@@ -242,8 +245,8 @@ jobs:
 
           rm -rf ./tmp* ./.config*
 
-          if [[ $WRT_TARGET == *"ax1800pro"* ]]; then
-            SimTARGET="ax1800pro"
+          if [[ $WRT_TARGET == *"ipq"* ]]; then
+            SimTARGET="ipq"
           else
             SimTARGET=$WRT_TARGET
           fi

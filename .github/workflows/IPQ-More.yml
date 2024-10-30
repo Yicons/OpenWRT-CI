@@ -1,5 +1,5 @@
 #CI项目
-name: JDC_AX1800Pro_More
+name: IPQ-More
 
 #CI计划
 on:
@@ -32,9 +32,9 @@ jobs:
       fail-fast: false
       #max-parallel: 3
       matrix:
-        TARGET: [jdc-ax1800pro-wifi-yes]
+        TARGET: [ipq60xx-wifi-yes,ipq60xx-wifi-no]
         #King-Of-Knights/openwrt-6.x, VIKINGYFY/immortalwrt, LiBwrt-op/openwrt-6.x, coolsnowwolf/lede, breeze303/openwrt-ipq
-        SOURCE: [VIKINGYFY/immortalwrt, LiBwrt-op/openwrt-6.x, King-Of-Knights/openwrt-6.x, coolsnowwolf/lede]
+        SOURCE: [VIKINGYFY/immortalwrt, LiBwrt-op/openwrt-6.x, coolsnowwolf/lede]
 
     #调用公用编译核心WRT-CORE.yml
     uses: ./.github/workflows/WRT-CORE.yml
@@ -48,7 +48,7 @@ jobs:
       #默认WIFI名
       WRT_WIFI: 
       #默认地址
-      WRT_IP: 10.10.10.18
+      WRT_IP: 10.10.1.18
       #默认密码，仅作提示，修改无用
       WRT_PW: 无
       #源码链接
