@@ -300,7 +300,6 @@ jobs:
 
           if [[ $WRT_TEST != 'true' ]]; then
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
-
             for TYPE in $WRT_TYPE ; do
               echo "查找"$TYPE
               for FILE in $(find ./bin/targets/ -type f -iname "*$TYPE*.*") ; do
@@ -308,7 +307,9 @@ jobs:
                 EXT=$(basename $FILE | cut -d '.' -f 2-)
                 NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($TYPE\).*")
                 # NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
-                NEW_FILE="$authorS"_"$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
+                
+                SourceVER="${WRT_SOURCE##*/}-${WRT_BRANCH}"
+                NEW_FILE="$authorS"_"$SourceVER"_"$WRT_TARGET"_"$NAME"_"$WRT_DATE"."$EXT"
                 mv -f $FILE ./upload/$NEW_FILE
                 echo "更新文件为"$(basename $NEW_FILE)
               done
