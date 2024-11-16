@@ -202,9 +202,9 @@ jobs:
             fi
 
           else
-          
+
             bodyinfo="_**JDC-AX1800PRO系列 , $WRT_SOURCE 源码 , 带开源硬件加速<br><br>如固件超60M ，需要先刷入大分区后再刷**_<br><br>"
-            bodyinfo+="jdcloud_ax1800-pro / jdcloud_re-ss-01 亚瑟<br>jdcloud_re-cs-02 雅典娜<br>jdcloud_re-cs-07 太乙<br><br>"
+            bodyinfo+="jdcloud_ax1800-pro / jdcloud_re-ss-01 亚瑟<br>jdcloud_ax6600 / jdcloud_re-cs-02 雅典娜<br>jdcloud_er1 / jdcloud_re-cs-07 太乙<br><br>"
             bodyinfo+="$author的源码"
 
             if [[ $WRT_REPO == *"VIKINGYFY"* ]]; then
