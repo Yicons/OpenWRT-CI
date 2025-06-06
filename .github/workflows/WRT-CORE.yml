@@ -74,7 +74,7 @@ jobs:
           sudo -E apt -yqq autoremove --purge
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix libfuse-dev
+          sudo -E apt -yqq install dos2unix libfuse-dev jq
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
@@ -94,15 +94,48 @@ jobs:
 
       - name: Clone Code
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+
+          case "$WRT_SOURCE" in
+            VIKINGYFY/immortalwrt)
+              WRT_BRANCH="main"
+              ;;
+            *)
+              echo "未匹配到指定分支，尝试获取默认分支..."
+              WRT_BRANCH=$(git ls-remote --symref "$WRT_REPO" HEAD 2>/dev/null | awk '/^ref:/ {print $2}' | sed 's|refs/heads/||')
+              if [[ -z "$WRT_BRANCH" ]]; then
+                echo "无法获取默认分支，请检查仓库地址或网络"
+                exit 1
+              fi
+              echo "自动检测到默认分支：$WRT_BRANCH"
+              ;;
+          esac
+
+          echo "WRT_BRANCH=$WRT_BRANCH" >> $GITHUB_ENV
+          
+          if [[ -n "$WRT_BRANCH" ]]; then
+            git clone --depth=1 --single-branch --branch "$WRT_BRANCH" "$WRT_REPO" ./wrt/
+          else
+            git clone --depth=1 --single-branch "$WRT_REPO" ./wrt/
+          fi
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
           # GitHub Action 移除国内下载源
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
-            sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+            # sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+
+            jq 'walk(
+              if type == "array" 
+                then map(select(test("tencent|aliyun|\\.cn") | not)) 
+                else . 
+              end
+            )' "$PROJECT_MIRRORS_FILE" > tmp.json && mv tmp.json "$PROJECT_MIRRORS_FILE"
+
+            echo "==== Modified projectsmirrors.json ===="
+            cat "$PROJECT_MIRRORS_FILE"
           fi
+
 
       - name: Check Scripts
         run: |
@@ -169,6 +202,7 @@ jobs:
           fi
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
+          $GITHUB_WORKSPACE/Scripts/Modify.sh  
 
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
@@ -177,14 +211,14 @@ jobs:
         run: |
           cd ./wrt/
 
-          make download -j$(nproc)
+          make download -j$(nproc) || make download -j1 V=s
 
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-
-          make -j$(nproc) || make -j$(nproc) V=s
+          
+          make -j$(nproc) || make -j1 V=s
 
       - name: Machine Information
         run: |

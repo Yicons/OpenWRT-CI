@@ -75,3 +75,9 @@ if [ -f "$RUST_FILE" ]; then
 
 	cd $PKG_PATH && echo "rust has been fixed!"
 fi
+
+# 替换成最新版的golang
+cd $GITHUB_WORKSPACE/wrt/
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang
+cd $PKG_PATCH && echo "golang update done!"

@@ -6,6 +6,7 @@ sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/coll
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
 #添加编译日期标识
 sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ $WRT_MARK-$WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
+# sed -i "s/(\(luciversion || ''\))/(\1) + (' \@ YICloud Build \~ $author \/ $WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ ./package/ -type f -name "10_system.js")
 
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
@@ -25,11 +26,18 @@ elif [ -f "$WIFI_UC" ]; then
 	sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" $WIFI_UC
 fi
 
-CFG_FILE="./package/base-files/files/bin/config_generate"
+if [[ $WRT_REPO == *"lede"* ]]; then
+	CFG_FILE="./package/base-files/luci2/bin/config_generate"
+else
+	CFG_FILE="./package/base-files/files/bin/config_generate"
+fi
 #修改默认IP地址
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $CFG_FILE
 #修改默认主机名
-sed -i "s/hostname='.*'/hostname='$WRT_NAME'/g" $CFG_FILE
+# sed -i "s/hostname='.*'/hostname='$WRT_NAME'/g" $CFG_FILE
+#修改默认时区
+sed -i "s/timezone='.*'/timezone='CST-8'/g" $CFG_FILE
+sed -i "/timezone='.*'/a\\\t\t\set system.@system[-1].zonename='Asia/Shanghai'" $CFG_FILE
 
 #配置文件修改
 echo "CONFIG_PACKAGE_luci=y" >> ./.config
