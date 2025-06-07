@@ -131,9 +131,6 @@ jobs:
                 else . 
               end
             )' "$PROJECT_MIRRORS_FILE" > tmp.json && mv tmp.json "$PROJECT_MIRRORS_FILE"
-
-            echo "==== Modified projectsmirrors.json ===="
-            cat "$PROJECT_MIRRORS_FILE"
           fi
 
 
