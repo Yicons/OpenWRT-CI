@@ -42,12 +42,14 @@ UPDATE_PACKAGE() {
 
 # 调用示例
 # UPDATE_PACKAGE "OpenAppFilter" "destan19/OpenAppFilter" "master" "" "custom_name1 custom_name2"
-# UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf" 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
+# 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
+UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf"
+# UPDATE_PACKAGE "OpenAppFilter" "sbwml/OpenAppFilter" "master" "" "luci-app-appfilter oaf"
 
 # UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
-# UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
+UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
 # UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
-UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
+# UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 
 # UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
 # UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
@@ -59,20 +61,21 @@ UPDATE_PACKAGE "passwall_packages" "xiaorouji/openwrt-passwall-packages" "main"
 # UPDATE_PACKAGE "v2ray-geodata" "sbwml/v2ray-geodata" "master"
 
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
-UPDATE_PACKAGE "luci-app-socat" "chenmozhijin/luci-app-socat" "main"
+# UPDATE_PACKAGE "luci-app-socat" "chenmozhijin/luci-app-socat" "main"
 UPDATE_PACKAGE "luci-app-filemanager" "sbwml/luci-app-filemanager" "main"
 
-UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
-UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
+UPDATE_PACKAGE "openlist" "sbwml/luci-app-openlist" "main"
+# UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
 UPDATE_PACKAGE "easytier" "EasyTier/luci-app-easytier" "main"
 UPDATE_PACKAGE "gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5" "" "v2dat"
-UPDATE_PACKAGE "netspeedtest" "sirpdboy/luci-app-netspeedtest" "js" "" "homebox speedtest"
+# UPDATE_PACKAGE "netspeedtest" "sirpdboy/luci-app-netspeedtest" "js" "" "homebox speedtest"
 UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main"
-UPDATE_PACKAGE "qbittorrent" "sbwml/luci-app-qbittorrent" "master" "" "qt6base qt6tools rblibtorrent"
-UPDATE_PACKAGE "qmodem" "FUjr/QModem" "main"
-UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "luci-app-timewol luci-app-wolplus"
+# UPDATE_PACKAGE "qbittorrent" "sbwml/luci-app-qbittorrent" "master" "" "qt6base qt6tools rblibtorrent"
+# UPDATE_PACKAGE "qmodem" "FUjr/QModem" "main"
+# UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "luci-app-timewol luci-app-wolplus"
 UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
+
 
 if [[ $WRT_REPO != *"immortalwrt"* ]]; then
 	UPDATE_PACKAGE "qmi-wwan" "immortalwrt/wwan-packages" "master" "pkg"
@@ -110,6 +113,7 @@ UPDATE_VERSION() {
 		local NEW_URL=$(echo $PKG_URL | sed "s/\$(PKG_VERSION)/$NEW_VER/g; s/\$(PKG_NAME)/$PKG_NAME/g")
 		local NEW_HASH=$(curl -sL "$NEW_URL" | sha256sum | cut -d ' ' -f 1)
 
+		echo "REPO: $PKG_REPO"
 		echo "old version: $OLD_VER $OLD_HASH"
 		echo "new version: $NEW_VER $NEW_HASH"
 
@@ -130,52 +134,101 @@ UPDATE_VERSION "tailscale"
 
 # Git稀疏克隆，只克隆指定目录到指定目录
 git_sparse_clone() {
-	branch="$1"   # 分支名
-	repourl="$2"  # 仓库地址
-	mvpath="$3"    # 转移地址
-	shift 3       # 移动参数，使后续参数是需要稀疏检出的文件夹
+    local branch="$1"    # 分支名
+    local repourl="$2"   # 仓库地址
+    local mvpath="$3"    # 转移地址（相对脚本目录）
+    shift 3              # 剩余参数为稀疏检出路径
 
+	local repodir cachepath src_dir foldername del_dirs dir
 	# 克隆指定分支的仓库，使用稀疏检出
-	git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
-	repodir=$(basename "$repourl" .git)  # 提取仓库目录名
+    repodir=$(basename "$repourl" .git)
+	echo -e "\n[info] sparse clone: $repodir"
 
-	# 进入克隆的仓库目录
-	cd $repodir
+    # 获取当前操作目录
+    local pwd_path
+	pwd_path="$PWD"
+	echo "[info] pwd_path: $pwd_path"
+    cachepath="$pwd_path/cache_repo/$repodir"
+
+    # 冲突处理：已存在则加时间戳
+    if [[ -d "$cachepath" ]]; then
+        local timestamp
+        timestamp=$(date +%Y%m%d-%H%M%S)
+        cachepath="${cachepath}_${timestamp}"
+    fi
+
+	echo -e "[clone] $repourl => $cachepath (branch: $branch)"
+
+    # 执行稀疏克隆
+	git clone --depth=1 -b "$branch" --single-branch --filter=blob:none --sparse "$repourl" "$cachepath"
 
 	# 检出指定的文件夹
-	git sparse-checkout set $@
+	git -C "$cachepath" sparse-checkout set "$@"
 
-	if [ -d "$REPO_PATCH/$mvpath" ]; then
-		# 循环移动所有需要检出的文件夹
-		for folder in "$@"; do
-			# 提取文件夹名，忽略父目录
-			foldername=$(basename "$folder")
-			rm -rf $(find $REPO_PATCH/feeds/luci/ $REPO_PATCH/feeds/packages/ -maxdepth 3 -type d -iname "*$foldername*" -prune)
-			cp -rf $(find ./ -maxdepth 3 -type d -iname "*$foldername*" -prune) $REPO_PATCH/$mvpath
-			if [[ $mvpath == "package/" ]]; then
-				find $REPO_PATCH/package/$foldername/ -name "Makefile" -exec sed -i 's|include ../../luci.mk|include $(TOPDIR)/feeds/luci/luci.mk|g' {} +
-				find $REPO_PATCH/package/$foldername/ -name "Makefile" -exec sed -i 's|include ../../lang/golang/golang-package.mk|include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g' {} +
-			fi
-			echo "Sparse Update $foldername down!"
-		done
-		# ls -l "$REPO_PATCH/$mvpath"
-	else
-		echo $mvpath"不存在"
-	fi
+    local full_mvpath="$pwd_path/${mvpath%/}"  # 去掉末尾/
+    mkdir -p "$full_mvpath"
 
-	# 返回上一级目录并删除克隆的仓库目录
-	cd .. 
-	rm -rf $repodir
+	# 循环移动所有需要检出的文件夹
+	for folder in "$@"; do
+		foldername=$(basename "$folder")
+		echo -e "sparse-checkout: $foldername"
+		# 删除 feeds 中存在的同名目录
+		del_dirs=$(find "$pwd_path/feeds/luci" "$pwd_path/feeds/packages" -maxdepth 3 -type d -iname "*$foldername*" 2>/dev/null)
+        if [[ -n "$del_dirs" ]]; then
+            while read -r dir; do
+                rm -rf "$dir"
+                echo "[delete] $dir"
+            done <<< "$del_dirs"
+        else
+            echo "[miss] not found in feeds: $foldername"
+        fi
+
+        # 计算 maxdepth = 传入路径中 '/' 个数 + 1
+        maxdepth_count=$(( $(echo "$folder" | awk -F"/" '{print NF}') ))
+
+		# 查找克隆目录中匹配的文件夹
+		# src_dir=$(find "$cachepath" -maxdepth 3 -type d -iname "*$foldername*" -prune | head -n 1)
+		src_dir=$(find "$cachepath" -maxdepth "$maxdepth_count" -type d -exec bash -c '[[ "$(basename "{}")" == "'"$foldername"'" ]] && echo "{}"' \; | head -n 1)
+        if [[ -n "$src_dir" ]]; then
+            cp -rf "$src_dir" "$full_mvpath/"
+            echo "[copy] $src_dir => $full_mvpath/"
+        else
+            echo "[fail] source not found: $foldername"
+            continue
+        fi
+
+        # 修复 Makefile 引用路径（仅针对 package 目录）
+        if [[ "$mvpath" == "package" ]]; then
+			echo "need update Makefile"
+            find "$full_mvpath/$foldername" -name "Makefile" -exec sed -i \
+                -e 's|include ../../luci.mk|include $(TOPDIR)/feeds/luci/luci.mk|g' \
+                -e 's|include ../../lang/golang/golang-package.mk|include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g' {} +
+        fi
+		
+		echo "[done] sparse update: $foldername success!"
+
+
+		# if [[ $mvpath == "package/" ]]; then
+		# 	find ./package/$foldername/ -name "Makefile" -exec sed -i 's|include ../../luci.mk|include $(TOPDIR)/feeds/luci/luci.mk|g' {} +
+		# 	find ./package/$foldername/ -name "Makefile" -exec sed -i 's|include ../../lang/golang/golang-package.mk|include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g' {} +
+		# fi
+	done
+
+	rm -rf "$pwd_path/cache_repo"
 }
 
 REPO_PATCH="$GITHUB_WORKSPACE/wrt/"
 
+cd $REPO_PATCH
+
 # git_sparse_clone "分支名" "仓库地址" "转移地址(编译根目录下)" "单/多个需要文件夹的目录"
-git_sparse_clone main https://github.com/VIKINGYFY/packages package/ luci-app-wolplus
+git_sparse_clone main https://github.com/VIKINGYFY/packages package luci-app-wolplus luci-app-timewol
+git_sparse_clone main https://github.com/sbwml/openwrt_pkgs package luci-app-socat luci-app-diskman luci-app-eqos luci-app-vlmcsd vlmcsd 
 
 if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
-	git_sparse_clone master https://github.com/immortalwrt/packages package/ net/zerotier net/ddns-go
-	git_sparse_clone master https://github.com/immortalwrt/luci package/ applications/luci-app-zerotier applications/luci-app-ddns-go applications/luci-app-autoreboot
+	git_sparse_clone master https://github.com/immortalwrt/immortalwrt package package/network/utils/fullconenat-nft
+	git_sparse_clone master https://github.com/immortalwrt/packages package net/zerotier net/ddns-go
+	git_sparse_clone master https://github.com/immortalwrt/luci package applications/luci-app-zerotier applications/luci-app-ddns-go applications/luci-app-autoreboot
 fi
 
 # if [[ $WRT_REPO == *"lede"* ]]; then
@@ -187,13 +240,3 @@ fi
 # 	git_sparse_clone master https://github.com/immortalwrt/packages package/ net/msd_lite
 # 	git_sparse_clone master https://github.com/immortalwrt/luci package/ applications/luci-app-msd_lite
 # fi
-
-# # iStore
-# git_sparse_clone main https://github.com/linkease/istore-ui app-store-ui
-# git_sparse_clone main https://github.com/linkease/istore luci
-
-# # 晶晨宝盒
-# git_sparse_clone main https://github.com/ophub/luci-app-amlogic luci-app-amlogic
-# sed -i "s|firmware_repo.*|firmware_repo 'https://github.com/haiibo/OpenWrt'|g" package/luci-app-amlogic/root/etc/config/amlogic
-# # sed -i "s|kernel_path.*|kernel_path 'https://github.com/ophub/kernel'|g" package/luci-app-amlogic/root/etc/config/amlogic
-# sed -i "s|ARMv8|ARMv8_PLUS|g" package/luci-app-amlogic/root/etc/config/amlogic

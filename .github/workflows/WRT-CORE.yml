@@ -59,7 +59,7 @@ env:
 jobs:
   core:
     name: ${{inputs.WRT_SOURCE}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Projects
         uses: actions/checkout@main
@@ -74,7 +74,7 @@ jobs:
           sudo -E apt -yqq autoremove --purge
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix libfuse-dev jq
+          sudo -E apt -yqq install dos2unix libfuse-dev jq imagemagick
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
@@ -82,6 +82,13 @@ jobs:
           sudo mkdir -p /mnt/build_wrt
           sudo chown $USER:$USER /mnt/build_wrt
           sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
+
+          # # clang版本降级
+          # clang++ --version
+          # sudo -E apt -yqq remove --purge clang
+          # sudo -E apt -yqq autoremove
+          # sudo -E apt -yqq install clang
+          # clang++ --version
 
       - name: Initialization Values
         run: |
@@ -131,9 +138,6 @@ jobs:
                 else . 
               end
             )' "$PROJECT_MIRRORS_FILE" > tmp.json && mv tmp.json "$PROJECT_MIRRORS_FILE"
-
-            echo "==== Modified projectsmirrors.json ===="
-            cat "$PROJECT_MIRRORS_FILE"
           fi
 
 
@@ -190,6 +194,12 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
+          
+          # 替换背景
+          rm -rf ./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/img/bg.webp
+          wget -q -O bg.jpg https://raw.githubusercontent.com/jerrykuku/luci-theme-argon/master/htdocs/luci-static/argon/img/bg1.jpg
+          convert bg.jpg ./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/img/bg.webp
+          rm bg.jpg
 
       - name: Custom Settings
         run: |
@@ -202,8 +212,8 @@ jobs:
           fi
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
-          $GITHUB_WORKSPACE/Scripts/Modify.sh  
-
+          $GITHUB_WORKSPACE/Scripts/Modify.sh
+          
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
       - name: Download Packages

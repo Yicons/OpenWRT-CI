@@ -1,0 +1,44 @@
+--- a/package/OpenAppFilter/oaf/src/app_filter.c
++++ b/package/OpenAppFilter/oaf/src/app_filter.c
+@@ -1080,25 +1080,26 @@
+ {
+ 	char *host = NULL;
+ 	unsigned int len = 0;
+-    if (!client || !flow)
+-        return -1;
+-	
+-	if (flow->https.match){
+-		host = flow->https.url_pos;
++  if (!client || !flow)
++    return -1;
++    
++  if (flow->https.match){
++    host = flow->https.url_pos;
+ 
+-		len = flow->https.url_len;
++    len = flow->https.url_len;
+ 	}
+-	else if (flow->http.match){
+-		host = flow->http.host_pos;
+-		len = flow->http.host_len;
++  else if (flow->http.match){
++    host = flow->http.host_pos;
++    len = flow->http.host_len;
+ 	}
+-    if (!host || len < MIN_REPORT_URL_LEN || len >= MAX_REPORT_URL_LEN)
+-        return -1;
++  if (!host || len < MIN_REPORT_URL_LEN || len >= MAX_REPORT_URL_LEN)
++    return -1;
+ 
+-    memcpy(client->visiting.visiting_url, host, len);
+-    client->visiting.visiting_url[len] = 0x0; 
+-    client->visiting.url_time = af_get_timestamp_sec();
+-    return 0;
++  memcpy(client->visiting.visiting_url, host, len);
++  client->visiting.visiting_url[len] = 0x0; 
++  client->visiting.url_time = af_get_timestamp_sec();
++  
++  return 0;
+ }
+ 
+ 

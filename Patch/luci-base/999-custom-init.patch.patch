@@ -1,0 +1,76 @@
+diff --git a/package/base-files/files/etc/uci-defaults/99-custom-init b/package/base-files/files/etc/uci-defaults/99-custom-init
+new file mode 100755
+index 0000000..abcd123
+--- /dev/null
++++ b/package/base-files/files/etc/uci-defaults/99-custom-init
+@@ -0,0 +1,70 @@
++#!/bin/sh
++
++# 加载系统信息和 UCI 函数工具
++. /etc/os-release
++. /lib/functions/uci-defaults.sh
++
++# 设置别名，根据架构或平台识别当前设备
++[ "$(uname -m)" = "x86_64" ] && alias board_name="echo x86_64"
++[ "$OPENWRT_BOARD" = "armsr/armv8" ] && alias board_name="echo armsr,armv8"
++
++# 如果存在 luci argon 主题，设置默认主题为 argon，且开启轮询刷新
++if [ -d "/www/luci-static/argon" ] && [ -z "$(uci -q get luci.main.pollinterval)" ]; then
++    uci set luci.main.mediaurlbase='/luci-static/argon'     # 设置默认前端主题路径
++    uci set luci.main.pollinterval='3'                       # 设置 UI 页面刷新时间（秒）
++    uci commit luci
++fi
++
++# 设置系统时区为 CST-8，地理区域为 Asia/Shanghai
++uci set system.@system[0].timezone=CST-8
++uci set system.@system[0].zonename=Asia/Shanghai
++uci commit system
++
++# 设置系统日志等级
++uci set system.@system[0].conloglevel='1'     # 控制台日志等级
++uci set system.@system[0].cronloglevel='9'    # 定时任务日志等级
++uci commit system
++
++# 自动计算并配置 ZRAM 大小，占物理内存的 25%，压缩算法为 lz4
++mem_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')                      # 单位 KB
++zram_size=$(echo | awk "{print int($mem_total*0.25/1024)}")                      # 单位 MB
++uci set system.@system[0].zram_size_mb="$zram_size"
++uci set system.@system[0].zram_comp_algo='lz4'
++uci commit system
++
++# 软件源地址替换为国内镜像，根据是否为 SNAPSHOT 分别选择阿里云或上海交大
++if [ $(grep -c SNAPSHOT /etc/opkg/distfeeds.conf) -eq 0 ]; then
++    sed -i 's,downloads.openwrt.org,mirrors.aliyun.com/openwrt,g' /etc/opkg/distfeeds.conf
++else
++    sed -i 's,downloads.openwrt.org,mirror.sjtu.edu.cn/openwrt,g' /etc/opkg/distfeeds.conf
++fi
++
++# 启用硬件加速 flow_offloading，如果只有一个网口或是特定架构设备则放宽默认 zone 输入策略
++[ $(grep -c shortcut_fe /etc/config/firewall) -eq 0 ] && uci set firewall.@defaults[0].flow_offloading='1'
++if [ "$(ifconfig -a | grep -o '^eth[^ ]*' | wc -l)" -le 1 ] || [ "$OPENWRT_BOARD" = "armsr/armv8" ]; then
++    uci set firewall.@zone[1].input='ACCEPT'     # WAN zone 的默认输入设为允许
++fi
++uci set firewall.@defaults[0].input='ACCEPT'     # 默认输入设为允许
++uci commit firewall
++
++# 替换 luci 诊断工具的测试地址为国内（避免 openwrt.org 无法访问）
++if [ "$(uci -q get luci.diag.ping)" = "openwrt.org" ]; then
++    uci set luci.diag.dns='www.qq.com'
++    uci set luci.diag.ping='www.qq.com'
++    uci set luci.diag.route='www.qq.com'
++    uci commit luci
++fi
++
++# 启用网络多核调度（Packet Steering），适用于多核设备
++uci -q get network.globals.packet_steering > /dev/null || {
++    uci set network.globals='globals'
++    uci set network.globals.packet_steering=2
++    uci set network.globals.steering_flows='128'
++    uci commit network
++}
++
++# 删除 coremark 的定时任务（用于禁用启动性能测试）
++sed -i '/coremark/d' /etc/crontabs/root
++crontab /etc/crontabs/root
++
++exit 0
