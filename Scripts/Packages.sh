@@ -62,7 +62,7 @@ UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 UPDATE_PACKAGE "luci-app-socat" "chenmozhijin/luci-app-socat" "main"
 UPDATE_PACKAGE "luci-app-filemanager" "sbwml/luci-app-filemanager" "main"
 
-UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
+UPDATE_PACKAGE "openlist" "sbwml/luci-app-openlist" "main"
 UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
 UPDATE_PACKAGE "easytier" "EasyTier/luci-app-easytier" "main"
 UPDATE_PACKAGE "gecoosac" "lwb1978/openwrt-gecoosac" "main"
