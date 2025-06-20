@@ -189,8 +189,10 @@ jobs:
           $GITHUB_WORKSPACE/Scripts/Handles.sh
           
           # 替换背景
-          rm -rf ./wrt/package/luci-theme-argon/htdocs/luci-static/argon/img/bg.webp
-          wget -O ./wrt/package/luci-theme-argon/htdocs/luci-static/argon/img/bg.webp https://raw.githubusercontent.com/jerrykuku/luci-theme-argon/master/htdocs/luci-static/argon/img/bg1.jpg
+          rm -rf ./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/img/bg.webp
+          wget -O ./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/img/bg.webp https://raw.githubusercontent.com/jerrykuku/luci-theme-argon/master/htdocs/luci-static/argon/img/bg1.jpg
+          
+          
 
       - name: Custom Settings
         run: |
