@@ -4,6 +4,13 @@
 
 PATCH_DIR="$GITHUB_WORKSPACE/Patch"
 
+# natmap
+sed -i 's/log_stdout:bool:1/log_stdout:bool:0/g;s/log_stderr:bool:1/log_stderr:bool:0/g' feeds/packages/net/natmap/files/natmap.init
+pushd feeds/luci
+    # curl -s $mirror/sopenwrt/patch/luci/applications/luci-app-natmap/0001-luci-app-natmap-add-default-STUN-server-lists.patch | patch -p1
+    patch -p1 < $PATCH_DIR/luci-app-natmap/0001-luci-app-natmap-add-default-STUN-server-lists.patch
+popd
+
 # samba4 - bump version
 rm -rf feeds/packages/net/samba4
 git clone https://github.com/sbwml/feeds_packages_net_samba4 feeds/packages/net/samba4
@@ -67,6 +74,7 @@ patch -p1 < $PATCH_DIR/luci-system_status/0001-luci-mod-system-add-modal-overlay
 # patch -p1 < $PATCH_DIR/luci-system_status/0003-luci-mod-status-storage-index-applicable-only-to-val.patch
 # patch -p1 < $PATCH_DIR/luci-system_status/0004-luci-mod-status-firewall-disable-legacy-firewall-rul.patch
 patch -p1 < $PATCH_DIR/luci-system_status/0005-luci-mod-system-add-refresh-interval-setting.patch
+patch -p1 < $PATCH_DIR/luci-system_status/0006-luci-mod-system-add-ucitrack-luci-mod-system-zram.js.patch
 
 # translation
 cat <<EOF >> feeds/luci/modules/luci-base/po/zh_Hans/base.po
