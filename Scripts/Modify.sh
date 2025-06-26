@@ -10,17 +10,18 @@ echo -e "\n modify OpenAppFilter!"
 patch -p1 < $PATCH_DIR/openappfilter/001-open_app_filter-refactor-update-url-visiting-info-style.patch
 patch -p1 < $PATCH_DIR/openappfilter/099-luci-app-oaf-change-order.patch
 
-# OpenAppFilter更换到network
-sed -i 's/services/network/g' package/OpenAppFilter/luci-app-oaf/luasrc/controller/appfilter.lua
-sed -i 's/services/network/g' package/OpenAppFilter/luci-app-oaf/luasrc/model/cbi/appfilter/dev_status.lua
-sed -i 's/services/network/g' package/OpenAppFilter/luci-app-oaf/luasrc/view/admin_network/app_filter.htm
+# # OpenAppFilter更换到network
+# sed -i 's/services/network/g' package/OpenAppFilter/luci-app-oaf/luasrc/controller/appfilter.lua
+# sed -i 's/services/network/g' package/OpenAppFilter/luci-app-oaf/luasrc/model/cbi/appfilter/dev_status.lua
+# sed -i 's/services/network/g' package/OpenAppFilter/luci-app-oaf/luasrc/view/admin_network/app_filter.htm
 
-echo -e "\n modify socat!"
-# socat 更换到 services
-sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/controller/socat.lua
-sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/model/cbi/socat/index.lua
-sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/view/socat/list_status.htm
-sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/model/cbi/socat/config.lua
+# echo -e "\n modify socat!"
+# # socat 更换到 services
+# sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/controller/socat.lua
+# sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/model/cbi/socat/index.lua
+# sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/view/socat/list_status.htm
+# sed -i 's/network/services/g' package/luci-app-socat/luci-app-socat/luasrc/model/cbi/socat/config.lua
+
 
 echo -e "\n modify natmap!"
 # natmap

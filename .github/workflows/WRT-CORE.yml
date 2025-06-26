@@ -83,13 +83,6 @@ jobs:
           sudo chown $USER:$USER /mnt/build_wrt
           sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
 
-          # # clang版本降级
-          # clang++ --version
-          # sudo -E apt -yqq remove --purge clang
-          # sudo -E apt -yqq autoremove
-          # sudo -E apt -yqq install clang
-          # clang++ --version
-
       - name: Initialization Values
         run: |
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
@@ -213,6 +206,7 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
           $GITHUB_WORKSPACE/Scripts/Modify.sh
+          $GITHUB_WORKSPACE/Scripts/MenuOrder.sh
           
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
@@ -272,12 +266,6 @@ jobs:
           tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
-
-            全系带开源硬件加速，别问了！
-
             源码：${{env.WRT_REPO}}
             分支：${{env.WRT_BRANCH}}
             提交：${{env.WRT_HASH}}
