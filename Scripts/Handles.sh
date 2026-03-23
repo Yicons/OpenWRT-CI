@@ -32,7 +32,9 @@ if [ -d *"luci-theme-argon"* ]; then
 
 	cd ./luci-theme-argon/
 
-	sed -i "s/primary '.*'/primary '#31a1a1'/; s/'0.2'/'0.5'/; s/'none'/'bing'/; s/'600'/'normal'/" ./luci-app-argon-config/root/etc/config/argon
+	sed -i "s/'0.2'/'0.3'/" ./luci-app-argon-config/root/etc/config/argon
+	sed -i "/font-weight:/ { /important/! { /\/\*/! s/:.*/: var(--font-weight);/ } }" $(find ./luci-theme-argon -type f -iname "*.css")
+	# sed -i "s/primary '.*'/primary '#31a1a1'/; s/'0.2'/'0.5'/; s/'none'/'bing'/; s/'600'/'normal'/" ./luci-app-argon-config/root/etc/config/argon
 
 	cd $PKG_PATH && echo "theme-argon has been fixed!"
 fi
@@ -93,19 +95,24 @@ DM_FILE="./luci-app-diskman/applications/luci-app-diskman/Makefile"
 if [ -f "$DM_FILE" ]; then
 	echo " "
 
+	sed -i 's/fs-ntfs/fs-ntfs3/g' $DM_FILE
 	sed -i '/ntfs-3g-utils /d' $DM_FILE
 
 	cd $PKG_PATH && echo "diskman has been fixed!"
 fi
 
-#修复luci-app-netspeedtest相关问题
-if [ -d *"luci-app-netspeedtest"* ]; then
+#移除sb内核回溯移植补丁
+SB_PATCH="$GITHUB_WORKSPACE/wrt/feeds/packages/net/sing-box/patches"
+if [ -d "$SB_PATCH" ]; then
 	echo " "
 
-	cd ./luci-app-netspeedtest/
+	rm -rf $SB_PATCH
 
-	sed -i '$a\exit 0' ./netspeedtest/files/99_netspeedtest.defaults
-	sed -i 's/ca-certificates/ca-bundle/g' ./speedtest-cli/Makefile
-
-	cd $PKG_PATH && echo "netspeedtest has been fixed!"
+	cd $PKG_PATH && echo "sing-box patches has been fixed!"
 fi
+
+# 替换成最新版的golang
+cd $GITHUB_WORKSPACE/wrt/
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
+cd $PKG_PATCH && echo "golang update done!"

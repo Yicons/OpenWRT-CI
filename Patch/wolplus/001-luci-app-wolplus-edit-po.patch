@@ -1,0 +1,11 @@
+--- a/package/luci-app-wolplus/po/zh_Hans/wolplus.po
++++ b/package/luci-app-wolplus/po/zh_Hans/wolplus.po
+@@ -40,7 +40,7 @@
+ #: luci-app-wolplus/luasrc/controller/wolplus.lua:8
+ #: luci-app-wolplus/luasrc/model/cbi/wolplus.lua:3
+ msgid "Wake on LAN +"
+-msgstr ""
++msgstr "网络唤醒 +"
+ 
+ #: luci-app-wolplus/luasrc/model/cbi/wolplus.lua:3
+ msgid ""
