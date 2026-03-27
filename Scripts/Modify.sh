@@ -33,11 +33,8 @@ popd
 
 echo -e "\n modify samba4!"
 # samba4 - bump version
-rm -rf feeds/packages/net/samba4
-git clone https://github.com/sbwml/feeds_packages_net_samba4 feeds/packages/net/samba4
-# liburing - 2.7 (samba-4.21.0)
-# rm -rf feeds/packages/libs/liburing
-# git clone https://github.com/sbwml/feeds_packages_libs_liburing feeds/packages/libs/liburing
+#rm -rf feeds/packages/net/samba4
+#git clone https://$github/sbwml/feeds_packages_net_samba4 feeds/packages/net/samba4
 # enable multi-channel
 sed -i '/workgroup/a \\n\t## enable multi-channel' feeds/packages/net/samba4/files/smb.conf.template
 sed -i '/enable multi-channel/a \\tserver multi channel support = yes' feeds/packages/net/samba4/files/smb.conf.template
@@ -79,11 +76,11 @@ sed -i "s/'conf_inc:list(string)'/& \\\\/" $FRPC_FILE
 sed -i "/conf_inc:list/a\\\t\t\'enable:bool:0\'" $FRPC_FILE
 sed -i '/procd_open_instance/i\\t\[ "$enable" -ne 1 \] \&\& return 1\n' $FRPC_FILE
 #   将 token 字段改为密码输入框。这样，用户输入的 Token 将以星号或点的形式显示，保护 Token 信息的隐私
-patch -p1 < $PATCH_DIR/frpc/001-luci-app-frpc-hide-token-openwrt-24.10.patch
+patch -p1 < $PATCH_DIR/frpc/001-luci-app-frpc-hide-token.patch
 #   移除了 stdout 和 stderr 日志选项 
 #   可以通过 Web 界面启用或禁用 frpc 服务
 #   强制 respawn 默认开启，确保服务在崩溃时能够自动重启
-patch -p1 < $PATCH_DIR/frpc/002-luci-app-frpc-add-enable-flag-openwrt-24.10.patch
+patch -p1 < $PATCH_DIR/frpc/002-luci-app-frpc-add-enable-flag.patch
 
 #   frpc translation
 # sed -i 's,frp 服务器,FRP 服务器,g' feeds/luci/applications/luci-app-frps/po/zh_Hans/frps.po
