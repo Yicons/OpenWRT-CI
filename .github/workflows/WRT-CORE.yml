@@ -86,12 +86,15 @@ jobs:
             bc bison build-essential bzip2 ca-certificates ccache clang \
             cmake cpio curl device-tree-compiler dos2unix file flex \
             g++-multilib gawk gcc-multilib genisoimage gettext git jq \
-            libbpf-dev libclang-dev libdw-dev libelf-dev libncurses-dev libssl-dev lld \
-            llvm ninja-build patch perl pkgconf python3 python3-cryptography \
+            libbpf-dev libclang-dev libdw-dev libelf-dev libfuse-dev libncurses-dev libssl-dev lld \
+            llvm ninja-build patch perl pkgconf python3 python3-netifaces python3-cryptography \
             python3-dev python3-packaging python3-pyelftools python3-setuptools qemu-utils rsync swig \
             unzip wget xz-utils zlib1g-dev zstd
 
           sudo timedatectl set-timezone "Asia/Shanghai"
+
+          # sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          # sudo -E systemctl daemon-reload
 
           sudo mkdir -p /mnt/build_wrt
           sudo chown $USER:$USER /mnt/build_wrt
@@ -125,8 +128,32 @@ jobs:
       - name: Clone Code
         id: clone-code
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+          case "$WRT_SOURCE" in
+            VIKINGYFY/immortalwrt)
+              WRT_BRANCH="main"
+              ;;
+            *)
+              echo "未匹配到指定分支，尝试获取默认分支..."
+              WRT_BRANCH=$(git ls-remote --symref "$WRT_REPO" HEAD 2>/dev/null | awk '/^ref:/ {print $2}' | sed 's|refs/heads/||')
+              if [[ -z "$WRT_BRANCH" ]]; then
+                echo "无法获取默认分支，请检查仓库地址或网络"
+                exit 1
+              fi
+              echo "自动检测到默认分支：$WRT_BRANCH"
+              ;;
+          esac
 
+          echo "WRT_BRANCH=$WRT_BRANCH" >> $GITHUB_ENV
+          
+          if [[ -n "$WRT_BRANCH" ]]; then
+            git clone --depth=1 --single-branch --branch "$WRT_BRANCH" "$WRT_REPO" ./wrt/
+          else
+            git clone --depth=1 --single-branch "$WRT_REPO" ./wrt/
+          fi
+
+          # git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+
+          # cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
           cd ./wrt/
           WRT_HASH=$(git rev-parse HEAD)
           echo "WRT_HASH=$WRT_HASH" >> $GITHUB_ENV
@@ -136,8 +163,16 @@ jobs:
           # GitHub Action 移除国内下载源
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
-            sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+            # sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+
+            jq 'walk(
+              if type == "array" 
+                then map(select(test("tencent|aliyun|\\.cn") | not)) 
+                else . 
+              end
+            )' "$PROJECT_MIRRORS_FILE" > tmp.json && mv tmp.json "$PROJECT_MIRRORS_FILE"
           fi
+
 
       - name: Check Scripts
         run: |
@@ -174,11 +209,22 @@ jobs:
 
       - name: Custom Packages
         run: |
+          # cd ./wrt/package/
           cd ./wrt/
 
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
           $GITHUB_WORKSPACE/.github/scripts/prepare-i2c-tools.sh
+          
+          # 替换背景
+          ARGON_IMG="./package/luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/img"
+
+          if [ -d "$ARGON_IMG" ]; then
+            wget -O "$ARGON_IMG/bg.webp" \
+              "https://raw.githubusercontent.com/jerrykuku/luci-theme-argon/master/htdocs/luci-static/argon/img/bg1.webp"
+
+            echo "Argon background has been replaced!"
+          fi
 
       - name: Custom Settings
         run: |
@@ -193,6 +239,9 @@ jobs:
           $GITHUB_WORKSPACE/Scripts/Settings.sh
           $GITHUB_WORKSPACE/.github/scripts/prepare-build-host.sh
 
+          $GITHUB_WORKSPACE/Scripts/Modify.sh
+          $GITHUB_WORKSPACE/Scripts/MenuLayout.sh
+          
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
       - name: Prepare Rust Toolchain
@@ -207,7 +256,7 @@ jobs:
         run: |
           cd ./wrt/
 
-          make download -j$(nproc)
+          make download -j$(nproc) || make download -j1 V=s
 
       - name: Compile Firmware
         if: ${{ !inputs.WRT_TEST }}
@@ -273,6 +322,7 @@ jobs:
               EXT=$(basename $FILE | cut -d '.' -f 2-)
               NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
               NEW_FILE="$NAME"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_WIFI"-"$WRT_DATE"."$EXT"
+              # NEW_FILE="$WRT_INFO"-"$WRT_BRANCH"-"$NAME"-"$WRT_DATE"."$EXT"
               mv -f $FILE ./upload/$NEW_FILE
             done
 
@@ -287,12 +337,6 @@ jobs:
           tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
-
-            全系带开源硬件加速，别问了！
-
             源码：${{env.WRT_REPO}}
             分支：${{env.WRT_BRANCH}}
             提交：${{env.WRT_HASH}}
