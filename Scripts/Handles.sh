@@ -59,16 +59,6 @@ FIX() {
 # 	cd $PKG_PATH && echo "qca-nss-pbuf has been fixed!"
 # fi
 
-# # #修复TailScale配置文件冲突
-# TS_FILE=$(find ../feeds/packages/ -maxdepth 3 -type f -wholename "*/tailscale/Makefile")
-# if [ -f "$TS_FILE" ]; then
-# 	echo " "
-
-# 	sed -i '/\/files/d' $TS_FILE
-
-# 	cd $PKG_PATH && echo "tailscale has been fixed!"
-# fi
-
 # 保留 luci-app-tailscale 提供的配置和启动脚本，
 # 移除 tailscale 核心包中的重复安装命令
 TS_FILE="$FEEDS_PATH/packages/net/tailscale/Makefile"
