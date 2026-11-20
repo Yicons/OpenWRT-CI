@@ -4,6 +4,11 @@
 name: Auto-Clean
 
 on:
+  # X86 或 IPQ 检查/编译完成后自动清理旧运行记录
+  workflow_run:
+    workflows: ["X86-More", "IPQ-More"]
+    types:
+      - completed
   #手动清理
   workflow_dispatch:
 
@@ -21,4 +26,5 @@ jobs:
           delete_releases: false
           delete_tags: false
           delete_workflows: true
-          workflows_keep_day: 0
+          # 保留最近一天，避免刚完成的日志立刻消失，便于排查编译错误。
+          workflows_keep_day: 1
