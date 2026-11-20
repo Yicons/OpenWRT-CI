@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MIT
+
+name: Build-Check
+
+on:
+  # 每天早上约 5 点统一唤醒 X86/IPQ 工作流。
+  # 本文件只负责定时触发；实际比较逻辑在 WRT-CORE.yml 的 source-check 任务中。
+  schedule:
+    - cron: 21 21 * * *
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger X86 and IPQ checks
+        run: echo "X86 and IPQ will compare source commits and build-input fingerprints."

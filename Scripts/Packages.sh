@@ -56,8 +56,9 @@ UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
 UPDATE_PACKAGE "shadcn" "eamonxg/luci-theme-shadcn" "main"
 UPDATE_PACKAGE "vantage" "anothaDev/luci-theme-vantage" "main"
 
-UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
-UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
+# 暂不使用 Momo、Nikki；需要时取消下面两行注释。
+# UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
+# UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"

@@ -32,7 +32,8 @@ on:
         required: true
         type: string
       WRT_BRANCH:
-        required: true
+        required: false
+        default: ''
         type: string
       WRT_SOURCE:
         required: true
@@ -41,6 +42,14 @@ on:
         required: false
         type: string
       WRT_TEST:
+        required: false
+        default: false
+        type: boolean
+      WRT_AUTO:
+        required: false
+        default: false
+        type: boolean
+      WRT_FORCE:
         required: false
         default: false
         type: boolean
@@ -59,11 +68,133 @@ env:
   WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
+  WRT_AUTO: ${{inputs.WRT_AUTO}}
+  WRT_FORCE: ${{inputs.WRT_FORCE}}
 
 jobs:
+  source-check:
+    name: Check ${{inputs.WRT_SOURCE}}
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{steps.check.outputs.build}}
+      source_hash: ${{steps.check.outputs.source_hash}}
+      build_hash: ${{steps.check.outputs.build_hash}}
+      branch: ${{steps.check.outputs.branch}}
+    steps:
+      - name: Checkout build definitions
+        uses: actions/checkout@main
+
+      - name: Compare with last successful firmware
+        id: check
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: |
+          RESOLVED_BRANCH="$WRT_BRANCH"
+          if [[ -z "$RESOLVED_BRANCH" ]]; then
+            DEFAULT_REF=$(git ls-remote --symref "$WRT_REPO" HEAD | awk '$1 == "ref:" { print $2; exit }')
+            RESOLVED_BRANCH=${DEFAULT_REF#refs/heads/}
+          fi
+
+          if [[ -z "$RESOLVED_BRANCH" ]]; then
+            echo "Unable to resolve the default branch of $WRT_REPO" >&2
+            exit 1
+          fi
+
+          REMOTE_HASH=$(git ls-remote "$WRT_REPO" "refs/heads/$RESOLVED_BRANCH" | awk 'NR == 1 { print $1 }')
+          if [[ ! "$REMOTE_HASH" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Unable to resolve $WRT_REPO branch $RESOLVED_BRANCH" >&2
+            exit 1
+          fi
+
+          # 只计算会影响当前固件的仓库内容；README 等无关文件不会触发编译。
+          BUILD_HASH=$(
+            {
+              printf '%s\n' \
+                "config=$WRT_CONFIG" \
+                "theme=$WRT_THEME" \
+                "name=$WRT_NAME" \
+                "ssid=$WRT_SSID" \
+                "word=$WRT_WORD" \
+                "ip=$WRT_IP" \
+                "password=$WRT_PW" \
+                "repo=$WRT_REPO" \
+                "branch=$RESOLVED_BRANCH" \
+                "source=$WRT_SOURCE" \
+                "packages=$WRT_PACKAGE"
+
+              git ls-files -z -- \
+                "Config/$WRT_CONFIG.txt" \
+                Config/GENERAL.txt \
+                Config/PRIVATE.txt \
+                Scripts \
+                Patch \
+                .github/scripts \
+                .github/workflows/WRT-CORE.yml |
+                while IFS= read -r -d '' FILE; do
+                  sha256sum "$FILE"
+                done
+            } | sha256sum | awk '{ print $1 }'
+          )
+
+          echo "source_hash=$REMOTE_HASH" >> "$GITHUB_OUTPUT"
+          echo "build_hash=$BUILD_HASH" >> "$GITHUB_OUTPUT"
+          echo "branch=$RESOLVED_BRANCH" >> "$GITHUB_OUTPUT"
+
+          if [[ "$WRT_AUTO" != "true" || "$WRT_FORCE" == "true" ]]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Build check"
+              echo "- Config: $WRT_CONFIG"
+              echo "- Source: $WRT_REPO"
+              echo "- Branch: $RESOLVED_BRANCH"
+              echo "- Source commit: $REMOTE_HASH"
+              echo "- Build inputs: $BUILD_HASH"
+              echo "- Result: manual or forced build"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          RELEASES=$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100")
+          LAST_BODY=$(jq -r \
+            --arg source "$WRT_REPO" \
+            --arg branch "$RESOLVED_BRANCH" \
+            --arg config "$WRT_CONFIG" '
+            (first(.[][]
+              | select((.body // "") | contains("源码：" + $source))
+              | select((.body // "") | contains("分支：" + $branch))
+              | select((.body // "") | contains("配置：" + $config))
+              | (.body // "")) // "")
+          ' <<< "$RELEASES")
+
+          LAST_SOURCE_HASH=$(sed -n 's/^提交：\([0-9A-Fa-f]\{7,40\}\).*$/\1/p' <<< "$LAST_BODY" | head -n 1)
+          LAST_BUILD_HASH=$(sed -n 's/^构建指纹：\([0-9A-Fa-f]\{64\}\).*$/\1/p' <<< "$LAST_BODY" | head -n 1)
+
+          {
+            echo "### Build check"
+            echo "- Config: $WRT_CONFIG"
+            echo "- Source: $WRT_REPO"
+            echo "- Branch: $RESOLVED_BRANCH"
+            echo "- Source commit: $REMOTE_HASH"
+            echo "- Last source commit: ${LAST_SOURCE_HASH:-none}"
+            echo "- Build inputs: $BUILD_HASH"
+            echo "- Last build inputs: ${LAST_BUILD_HASH:-none}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$REMOTE_HASH" == "$LAST_SOURCE_HASH" && "$BUILD_HASH" == "$LAST_BUILD_HASH" ]]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "- Result: source and build inputs unchanged, skipped" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            echo "- Result: source or build inputs changed, build required" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   core:
     name: ${{inputs.WRT_SOURCE}}
+    needs: source-check
+    if: ${{needs.source-check.outputs.build == 'true'}}
     runs-on: ubuntu-latest
+    env:
+      WRT_BRANCH: ${{needs.source-check.outputs.branch}}
     outputs:
       cache_prefix: ${{steps.initialize-values.outputs.cache_prefix}}
       cache_key: ${{steps.clone-code.outputs.cache_key}}
@@ -86,8 +217,8 @@ jobs:
             bc bison build-essential bzip2 ca-certificates ccache clang \
             cmake cpio curl device-tree-compiler dos2unix file flex \
             g++-multilib gawk gcc-multilib genisoimage gettext git jq \
-            libbpf-dev libclang-dev libdw-dev libelf-dev libncurses-dev libssl-dev lld \
-            llvm ninja-build patch perl pkgconf python3 python3-cryptography \
+            libbpf-dev libclang-dev libdw-dev libelf-dev libfuse-dev libncurses-dev libssl-dev lld \
+            llvm ninja-build patch perl pkgconf python3 python3-netifaces python3-cryptography \
             python3-dev python3-packaging python3-pyelftools python3-setuptools qemu-utils rsync swig \
             unzip wget xz-utils zlib1g-dev zstd
 
@@ -130,13 +261,20 @@ jobs:
           cd ./wrt/
           WRT_HASH=$(git rev-parse HEAD)
           echo "WRT_HASH=$WRT_HASH" >> $GITHUB_ENV
+          echo "WRT_BUILD_HASH=${{needs.source-check.outputs.build_hash}}" >> $GITHUB_ENV
           echo "WRT_CACHE_KEY=$WRT_CACHE_PREFIX-$WRT_HASH" >> $GITHUB_ENV
           echo "cache_key=$WRT_CACHE_PREFIX-$WRT_HASH" >> "$GITHUB_OUTPUT"
 
           # GitHub Action 移除国内下载源
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
-            sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+            jq 'walk(
+              if type == "array"
+                then map(select(test("tencent|aliyun|\\.cn") | not))
+                else .
+              end
+            )' "$PROJECT_MIRRORS_FILE" > "$PROJECT_MIRRORS_FILE.tmp"
+            mv "$PROJECT_MIRRORS_FILE.tmp" "$PROJECT_MIRRORS_FILE"
           fi
 
       - name: Check Scripts
@@ -192,6 +330,9 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
           $GITHUB_WORKSPACE/.github/scripts/prepare-build-host.sh
+          $GITHUB_WORKSPACE/Scripts/Custom.sh
+          bash $GITHUB_WORKSPACE/Scripts/MenuLayout.sh
+          bash $GITHUB_WORKSPACE/Scripts/Optional.sh
 
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
@@ -207,7 +348,7 @@ jobs:
         run: |
           cd ./wrt/
 
-          make download -j$(nproc)
+          make download -j$(nproc) || make download -j1 V=s
 
       - name: Compile Firmware
         if: ${{ !inputs.WRT_TEST }}
@@ -282,20 +423,16 @@ jobs:
           fi
 
       - name: Release Firmware
+        if: ${{ !inputs.WRT_TEST }}
         uses: softprops/action-gh-release@master
         with:
           tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
-
-            全系带开源硬件加速，别问了！
-
             源码：${{env.WRT_REPO}}
             分支：${{env.WRT_BRANCH}}
             提交：${{env.WRT_HASH}}
+            构建指纹：${{env.WRT_BUILD_HASH}}
 
             配置：${{env.WRT_CONFIG}}
             平台：${{env.WRT_TARGET}}
@@ -308,6 +445,14 @@ jobs:
 
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}
+
+      - name: Upload Test Config
+        if: ${{ inputs.WRT_TEST }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-config-${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{github.run_attempt}}
+          path: ./wrt/upload/
+          retention-days: 7
 
   cache-rollover:
     name: Roll cache generations

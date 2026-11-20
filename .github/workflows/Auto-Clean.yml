@@ -4,9 +4,6 @@
 name: Auto-Clean
 
 on:
-  #自动清理：每天早上5点
-  schedule:
-    - cron: 21 21 * * *
   #手动清理
   workflow_dispatch:
 
@@ -20,8 +17,8 @@ jobs:
         uses: ophub/delete-releases-workflows@main
         with:
           gh_token: ${{secrets.GITHUB_TOKEN}}
-          delete_releases: true
-          releases_keep_latest: 0
-          delete_tags: true
+          # Release 中的源码提交用于判断是否需要重新编译，同时保留上一份成功固件。
+          delete_releases: false
+          delete_tags: false
           delete_workflows: true
           workflows_keep_day: 0
