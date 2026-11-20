@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MIT
+
+name: 04-Run-Clean
+
+on:
+  # X86 或 IPQ 检查/编译完成后，清理旧的 Action 运行记录。
+  workflow_run:
+    workflows: ["02-X86-More", "03-IPQ-More"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  run_clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old workflow runs
+        uses: ophub/delete-releases-workflows@main
+        with:
+          gh_token: ${{secrets.GITHUB_TOKEN}}
+          delete_releases: false
+          delete_tags: false
+          delete_workflows: true
+          # 保留最近一天，便于排查刚完成的编译日志。
+          workflows_keep_day: 1

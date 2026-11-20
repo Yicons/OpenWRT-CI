@@ -1,11 +1,11 @@
 #CI项目
-name: X86-More
+name: 02-X86-More
 
 #CI计划
 on:
-  #自动检查：当 Build-Check 运行完成后
+  #自动检查：当 01-Build-Check 运行完成后
   workflow_run:
-    workflows: ["Build-Check"]
+    workflows: ["01-Build-Check"]
     types:
       - completed
   #手动编译

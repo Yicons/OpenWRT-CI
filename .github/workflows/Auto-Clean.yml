@@ -4,7 +4,7 @@
 name: Auto-Clean
 
 on:
-  #手动清理
+  # 手动运行原清理流程；其他平台仍按上游逻辑监听本工作流。
   workflow_dispatch:
 
 permissions: write-all
@@ -17,8 +17,9 @@ jobs:
         uses: ophub/delete-releases-workflows@main
         with:
           gh_token: ${{secrets.GITHUB_TOKEN}}
-          # Release 中的源码提交用于判断是否需要重新编译，同时保留上一份成功固件。
+          # Release 由 WRT-CORE 按“配置 + 源码 + 分支”保留最新版，这里不做全局删除。
           delete_releases: false
           delete_tags: false
           delete_workflows: true
-          workflows_keep_day: 0
+          # 保留最近一天，避免刚完成的日志立刻消失，便于排查编译错误。
+          workflows_keep_day: 1

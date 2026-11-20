@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-name: Build-Check
+name: 01-Build-Check
 
 on:
   # 每天早上约 5 点统一唤醒 X86/IPQ 工作流。
