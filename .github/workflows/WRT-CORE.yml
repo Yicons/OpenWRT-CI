@@ -208,7 +208,6 @@ jobs:
         run: |
           sudo apt-get -yqq purge firefox
           sudo apt-get -yqq update
-          sudo apt-get -yqq full-upgrade
           sudo apt-get -yqq autoremove --purge
           sudo apt-get -yqq autoclean
           sudo apt-get -yqq clean
@@ -445,6 +444,42 @@ jobs:
 
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}
+
+      - name: Delete Older Matching Releases
+        if: ${{ !inputs.WRT_TEST }}
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          CURRENT_TAG: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+        run: |
+          if ! RELEASES=$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100"); then
+            echo "::warning::Unable to list old firmware releases"
+            exit 0
+          fi
+
+          OLD_TAGS=$(jq -r \
+            --arg source "$WRT_REPO" \
+            --arg branch "$WRT_BRANCH" \
+            --arg config "$WRT_CONFIG" \
+            --arg current "$CURRENT_TAG" '
+            .[][]
+              | select(.tag_name != $current)
+              | select((.body // "") | contains("源码：" + $source))
+              | select((.body // "") | contains("分支：" + $branch))
+              | select((.body // "") | contains("配置：" + $config))
+              | .tag_name
+          ' <<< "$RELEASES")
+
+          if [[ -z "$OLD_TAGS" ]]; then
+            echo "No older release matches $WRT_CONFIG / $WRT_REPO / $WRT_BRANCH"
+            exit 0
+          fi
+
+          while IFS= read -r OLD_TAG; do
+            [[ -z "$OLD_TAG" ]] && continue
+            echo "Deleting old release and tag: $OLD_TAG"
+            gh release delete "$OLD_TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" ||
+              echo "::warning::Unable to delete old release $OLD_TAG"
+          done <<< "$OLD_TAGS"
 
       - name: Upload Test Config
         if: ${{ inputs.WRT_TEST }}

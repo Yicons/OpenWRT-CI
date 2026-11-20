@@ -79,6 +79,15 @@ fi
 FRPS_PO="$FEEDS_PATH/luci/applications/luci-app-frps/po/zh_Hans/frps.po"
 [ -f "$FRPS_PO" ] && sed -i 's,frp 服务器,FRP 服务器,g' "$FRPS_PO"
 
+# wolultra：菜单名和页面标题共用这条翻译，统一改为简洁的“网络唤醒”。
+WOLULTRA_PO=$(find "$PACKAGE_PATH" -type f \
+	-path '*/luci-app-wolultra/po/zh_Hans/wolultra.po' -print -quit)
+if [ -n "$WOLULTRA_PO" ]; then
+	sed -i 's/msgstr "超级网络唤醒"/msgstr "网络唤醒"/' "$WOLULTRA_PO"
+else
+	echo "WARNING: wolultra Chinese translation not found, skipped rename"
+fi
+
 # LuCI 系统功能。补丁若失效则直接报错，避免静默生成缺少功能的固件。
 apply_patch_checked "reboot confirmation" "$FEEDS_PATH/luci" 1 \
 	"$PATCH_DIR/luci-system_status/0001-luci-mod-system-add-modal-overlay-dialog-to-reboot.patch"
