@@ -83,44 +83,68 @@ sparse_packages() {
 	local DEST=$3
 	shift 3
 
-	local TMP PATH NAME FOUND
-	TMP=$(mktemp -d "$PWD/.custom-sparse.XXXXXX") || return 1
+	local TMP SOURCE_PATH NAME FOUND
+	TMP=$(mktemp -d "$PWD/.custom-sparse.XXXXXX") || {
+		echo "ERROR: unable to create temporary directory for $REPO"
+		return 1
+	}
 	SPARSE_DIRS+=("$TMP")
 
-	git clone --depth=1 --single-branch --branch "$BRANCH" --filter=blob:none --sparse "$REPO" "$TMP"
-	git -C "$TMP" sparse-checkout set "$@"
-	mkdir -p "$DEST"
+	if ! git clone --depth=1 --single-branch --branch "$BRANCH" \
+		--filter=blob:none --sparse "$REPO" "$TMP"
+	then
+		echo "ERROR: unable to clone sparse package source: $REPO ($BRANCH)"
+		return 1
+	fi
+	if ! git -C "$TMP" sparse-checkout set "$@"; then
+		echo "ERROR: unable to select sparse package paths from $REPO: $*"
+		return 1
+	fi
 
-	for PATH in "$@"; do
-		NAME=${PATH##*/}
+	# 先确认所有来源目录有效，再删除现有包，防止上游改路径时留下缺包源码树。
+	for SOURCE_PATH in "$@"; do
+		if [ ! -d "$TMP/$SOURCE_PATH" ]; then
+			echo "ERROR: sparse package path missing: $REPO/$SOURCE_PATH"
+			return 1
+		fi
+	done
+
+	mkdir -p "$DEST" || return 1
+	for SOURCE_PATH in "$@"; do
+		NAME=${SOURCE_PATH##*/}
 
 		for FOUND in feeds/luci feeds/packages; do
 			[ -d "$FOUND" ] || continue
 			find "$FOUND" -maxdepth 3 -type d -name "$NAME" -prune -exec rm -rf {} +
 		done
 
-		if [ ! -d "$TMP/$PATH" ]; then
-			echo "Sparse package missing: $PATH"
+		# 直接放在 package 下的旧版本也必须清理，避免复制后残留旧文件。
+		rm -rf "$DEST/$NAME"
+		if ! cp -rf "$TMP/$SOURCE_PATH" "$DEST/"; then
+			echo "ERROR: unable to copy sparse package: $SOURCE_PATH"
 			return 1
 		fi
 
-		cp -rf "$TMP/$PATH" "$DEST/"
 		find "$DEST/$NAME" -name Makefile -type f -exec sed -i \
 			-e 's|include ../../luci.mk|include $(TOPDIR)/feeds/luci/luci.mk|g' \
 			-e 's|include ../../lang/golang/golang-package.mk|include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g' {} +
+		if ! find "$DEST/$NAME" -name Makefile -type f -print -quit | grep -q .; then
+			echo "ERROR: copied package has no Makefile: $DEST/$NAME"
+			return 1
+		fi
 	done
 }
 
 sparse_packages main https://github.com/sbwml/openwrt_pkgs package \
-	luci-app-socat luci-app-eqos luci-app-vlmcsd vlmcsd
+	luci-app-socat luci-app-eqos luci-app-vlmcsd vlmcsd || return 1
 
 # DDNS-Go 统一使用 ImmortalWrt 版本，覆盖上游脚本拉取的 sirpdboy 版本。
 rm -rf package/ddns-go package/luci-app-ddns-go
 if $DDNS_GO_ENABLED; then
 	sparse_packages master https://github.com/immortalwrt/packages package \
-		net/ddns-go
+		net/ddns-go || return 1
 	sparse_packages master https://github.com/immortalwrt/luci package \
-		applications/luci-app-ddns-go
+		applications/luci-app-ddns-go || return 1
 fi
 
 # HomeProxy 与 Passwall 分开选择核心来源。同一固件同时启用时优先使用
@@ -142,14 +166,14 @@ elif $HOME_PROXY_ENABLED; then
 	find feeds/luci feeds/packages package -mindepth 1 -maxdepth 4 \
 		-type d -name "sing-box" -prune -exec rm -rf {} + 2>/dev/null
 	sparse_packages master https://github.com/immortalwrt/packages package \
-		net/sing-box
+		net/sing-box || return 1
 fi
 
 if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
 	sparse_packages master https://github.com/immortalwrt/packages package \
-		net/zerotier lang/python/python-setuptools
+		net/zerotier lang/python/python-setuptools || return 1
 	sparse_packages master https://github.com/immortalwrt/luci package \
-		applications/luci-app-zerotier applications/luci-app-autoreboot
+		applications/luci-app-zerotier applications/luci-app-autoreboot || return 1
 fi
 
 # LEDE 备用包覆盖：以后重新加入 LEDE 源时，可取消整个区块的注释。
