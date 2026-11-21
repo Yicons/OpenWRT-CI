@@ -192,4 +192,38 @@ if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
 	fi
 fi
 
+# 官方 Nginx/uWSGI：保持现有 HTTP 80 访问方式，上传不限大小，LuCI 请求超时统一为 300 秒。
+# 通过 base-files 覆盖首次启动配置，不修改 feeds/packages 中的 Nginx 源码，便于继续跟随上游。
+NGINX_DEFAULTS_DIR="$PACKAGE_PATH/base-files/files/etc/uci-defaults"
+NGINX_CONF_DIR="$PACKAGE_PATH/base-files/files/etc/nginx/conf.d"
+mkdir -p "$NGINX_DEFAULTS_DIR" "$NGINX_CONF_DIR"
+
+cat > "$NGINX_DEFAULTS_DIR/50-nginx-http" <<'EOF'
+#!/bin/sh
+
+# 用 HTTP 80 替换 luci-nginx 默认的 HTTPS 监听和 80 -> 443 跳转。
+uci -q set nginx.global.uci_enable='true'
+uci -q delete nginx._lan
+uci -q delete nginx._redirect2ssl
+uci -q set nginx._lan='server'
+uci -q set nginx._lan.server_name='_lan'
+uci -q add_list nginx._lan.listen='80 default_server'
+uci -q add_list nginx._lan.listen='[::]:80 default_server'
+uci -q add_list nginx._lan.include='restrict_locally'
+uci -q add_list nginx._lan.include='conf.d/*.locations'
+uci -q set nginx._lan.access_log='off; # logd openwrt'
+uci -q commit nginx
+
+exit 0
+EOF
+chmod 0755 "$NGINX_DEFAULTS_DIR/50-nginx-http"
+
+cat > "$NGINX_CONF_DIR/99-router-defaults.locations" <<'EOF'
+# 路由器管理页面允许大文件上传，并给 LuCI/uWSGI 留出足够执行时间。
+client_max_body_size 0;
+uwsgi_connect_timeout 300s;
+uwsgi_send_timeout 300s;
+uwsgi_read_timeout 300s;
+EOF
+
 echo "Custom source overlay done"

@@ -4,28 +4,10 @@
 
 echo -e "\nApply private package overlay"
 
-# 按最终合并顺序读取设备配置和通用配置，避免依赖配置文件名称。
-config_enabled() {
-	local SYMBOL=$1 VALUE
-	VALUE=$(sed -n "s/^${SYMBOL}=\(.*\)$/\1/p" \
-		"$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt" \
-		"$GITHUB_WORKSPACE/Config/GENERAL.txt" 2>/dev/null | tail -n 1)
-	[ "$VALUE" = "y" ]
+# 代理和 DDNS-Go 都在设备配置中选择；切换软件时只需修改对应 Config/<设备>.txt。
+package_enabled() {
+	grep -q "^$1=y$" "$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt"
 }
-
-HOME_PROXY_ENABLED=false
-PASSWALL1_ENABLED=false
-PASSWALL2_ENABLED=false
-PASSWALL_ENABLED=false
-DDNS_GO_ENABLED=false
-config_enabled CONFIG_PACKAGE_luci-app-homeproxy && HOME_PROXY_ENABLED=true
-config_enabled CONFIG_PACKAGE_luci-app-passwall && PASSWALL1_ENABLED=true
-config_enabled CONFIG_PACKAGE_luci-app-passwall2 && PASSWALL2_ENABLED=true
-if $PASSWALL1_ENABLED || $PASSWALL2_ENABLED; then PASSWALL_ENABLED=true; fi
-if config_enabled CONFIG_PACKAGE_luci-app-ddns-go || config_enabled CONFIG_PACKAGE_ddns-go; then
-	DDNS_GO_ENABLED=true
-fi
-echo "Package selection: HomeProxy=$HOME_PROXY_ENABLED Passwall=$PASSWALL_ENABLED DDNS-Go=$DDNS_GO_ENABLED"
 
 # 删除上游阶段引入的重复包；Packages.sh 保持原样，便于以后同步上游。
 rm -rf \
@@ -36,16 +18,8 @@ rm -rf \
 	package/gecoosac \
 	package/luci-app-gecoosac
 
-# 上游会同时准备 Passwall 和 Passwall2；只保留当前配置实际启用的应用。
-if ! $PASSWALL1_ENABLED; then
-	rm -rf package/luci-app-passwall feeds/luci/applications/luci-app-passwall
-fi
-if ! $PASSWALL2_ENABLED; then
-	rm -rf package/luci-app-passwall2 feeds/luci/applications/luci-app-passwall2
-fi
-
 # HomeProxy 使用 ImmortalWrt 官方仓库；核心在后面的条件区块中选择。
-if $HOME_PROXY_ENABLED; then
+if package_enabled CONFIG_PACKAGE_luci-app-homeproxy; then
 	UPDATE_PACKAGE "homeproxy" "immortalwrt/homeproxy" "master"
 fi
 
@@ -67,7 +41,6 @@ fi
 
 # 从大仓库中只取需要的包。
 SPARSE_DIRS=()
-CUSTOM_SPARSE_ROOT=""
 
 cleanup_sparse_clone() {
 	local DIR
@@ -140,7 +113,9 @@ sparse_packages main https://github.com/sbwml/openwrt_pkgs package \
 
 # DDNS-Go 统一使用 ImmortalWrt 版本，覆盖上游脚本拉取的 sirpdboy 版本。
 rm -rf package/ddns-go package/luci-app-ddns-go
-if $DDNS_GO_ENABLED; then
+if package_enabled CONFIG_PACKAGE_luci-app-ddns-go || \
+	package_enabled CONFIG_PACKAGE_ddns-go
+then
 	sparse_packages master https://github.com/immortalwrt/packages package \
 		net/ddns-go || return 1
 	sparse_packages master https://github.com/immortalwrt/luci package \
@@ -156,13 +131,15 @@ PASSWALL_CORE_PACKAGES=(
 	v2ray-plugin xray-plugin geoview shadow-tls
 )
 
-if $PASSWALL_ENABLED; then
+if package_enabled CONFIG_PACKAGE_luci-app-passwall || \
+	package_enabled CONFIG_PACKAGE_luci-app-passwall2
+then
 	for PACKAGE_NAME in "${PASSWALL_CORE_PACKAGES[@]}"; do
 		find feeds/luci feeds/packages package -mindepth 1 -maxdepth 4 \
 			-type d -name "$PACKAGE_NAME" -prune -exec rm -rf {} + 2>/dev/null
 	done
 	UPDATE_PACKAGE "passwall-packages" "Openwrt-Passwall/openwrt-passwall-packages" "main"
-elif $HOME_PROXY_ENABLED; then
+elif package_enabled CONFIG_PACKAGE_luci-app-homeproxy; then
 	find feeds/luci feeds/packages package -mindepth 1 -maxdepth 4 \
 		-type d -name "sing-box" -prune -exec rm -rf {} + 2>/dev/null
 	sparse_packages master https://github.com/immortalwrt/packages package \
