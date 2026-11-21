@@ -146,8 +146,6 @@ elif $HOME_PROXY_ENABLED; then
 fi
 
 if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
-	sparse_packages master https://github.com/immortalwrt/immortalwrt package \
-		package/network/utils/fullconenat-nft
 	sparse_packages master https://github.com/immortalwrt/packages package \
 		net/zerotier lang/python/python-setuptools
 	sparse_packages master https://github.com/immortalwrt/luci package \

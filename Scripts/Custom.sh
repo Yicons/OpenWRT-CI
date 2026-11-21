@@ -7,6 +7,47 @@ PACKAGE_PATH="./package"
 
 echo -e "\nApply custom source overlay"
 
+# Fullcone 按源码分开维护：
+# - VIKINGYFY 移除其内置维护副本，直接应用 SONiC 原仓库；
+# - ImmortalWrt 使用源码自带的 nft-fullcone；
+# - LiBwrt 与官方 OpenWrt 不额外移植 Fullcone。
+if [[ $WRT_REPO == *"VIKINGYFY/immortalwrt"* ]]; then
+	echo "Replace VIKINGYFY Fullcone integration with upstream SONiC"
+	rm -rf \
+		package/emortal/luci-app-fullconenat-sonic \
+		package/network/utils/fullconenat-sonic
+	rm -f \
+		package/libs/libnftnl/patches/001-libnftnl-add-fullcone-expression-support.patch \
+		package/network/config/firewall/patches/001-sonic-fullcone.patch \
+		package/network/config/firewall4/patches/001-sonic-fullcone.patch \
+		package/network/config/firewall4/patches/002-default-enable-fullcone.patch \
+		package/network/utils/iptables/patches/901-sonic-fullcone.patch \
+		package/network/utils/nftables/patches/002-nftables-add-fullcone-expression-support.patch \
+		package/network/utils/nftables/patches/003-nftables-handle-fullcone-in-json-parser-and-optimizer.patch
+	find target/linux/generic -maxdepth 2 -type f \
+		\( -name '984-add-sonic-fullcone-support.patch' \
+		-o -name '985-add-sonic-fullcone-to-ipt.patch' \
+		-o -name '986-add-sonic-fullcone-to-nft.patch' \
+		-o -name '987-sonic-fullcone-fix-races-and-drops.patch' \) \
+		-delete 2>/dev/null
+
+	SONIC_INSTALLER=$(mktemp)
+	if [ -n "$SONIC_INSTALLER" ] && curl -fsSL \
+		"https://raw.githubusercontent.com/mufeng05/openwrt-sonic-fullcone/master/add_sonic_fullcone.sh" \
+		-o "$SONIC_INSTALLER" && bash "$SONIC_INSTALLER"
+	then
+		echo "Upstream SONiC Fullcone applied"
+	else
+		echo "WARNING: upstream SONiC Fullcone could not be applied; continuing without Fullcone"
+	fi
+	rm -f "$SONIC_INSTALLER"
+elif [[ $WRT_REPO == *"immortalwrt/immortalwrt"* ]]; then
+	echo "CONFIG_PACKAGE_kmod-nft-fullcone=y" >> .config
+	echo "ImmortalWrt native nft-fullcone selected"
+else
+	echo "No custom Fullcone overlay for $WRT_REPO"
+fi
+
 apply_patch_checked() {
 	local NAME=$1
 	local DIR=$2
