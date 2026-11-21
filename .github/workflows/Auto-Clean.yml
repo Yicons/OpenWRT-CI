@@ -4,12 +4,7 @@
 name: Auto-Clean
 
 on:
-  # X86 或 IPQ 检查/编译完成后自动清理旧运行记录
-  workflow_run:
-    workflows: ["X86-More", "IPQ-More"]
-    types:
-      - completed
-  #手动清理
+  # 手动运行原清理流程；其他平台仍按上游逻辑监听本工作流。
   workflow_dispatch:
 
 permissions: write-all
