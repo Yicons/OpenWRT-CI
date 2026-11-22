@@ -76,17 +76,17 @@ EOF
 chmod 755 "$DIAG_DEFAULT"
 
 # =============================================================================
-# 默认启用：删除 CoreMark 自动测试的定时任务；coremark 软件包本身仍保留
+# 默认启用：在上游 xxx-coremark 之后删除自动测试任务；软件包本身仍保留
 # =============================================================================
-COREMARK_DEFAULT="$PACKAGE_PATH/base-files/files/etc/uci-defaults/99-custom-coremark"
-mkdir -p "$(dirname "$COREMARK_DEFAULT")"
-cat > "$COREMARK_DEFAULT" <<'EOF'
-#!/bin/sh
-sed -i '/coremark/d' /etc/crontabs/root
-crontab /etc/crontabs/root
-exit 0
-EOF
-chmod 755 "$COREMARK_DEFAULT"
+# COREMARK_DEFAULT="$PACKAGE_PATH/base-files/files/etc/uci-defaults/zzz-custom-coremark"
+# mkdir -p "$(dirname "$COREMARK_DEFAULT")"
+# cat > "$COREMARK_DEFAULT" <<'EOF'
+# #!/bin/sh
+# sed -i '/coremark/d' /etc/crontabs/root
+# crontab /etc/crontabs/root
+# exit 0
+# EOF
+# chmod 755 "$COREMARK_DEFAULT"
 
 # =============================================================================
 # 暂未启用：qca-nss-pbuf 启动顺序改为 86
@@ -156,13 +156,6 @@ chmod 755 "$COREMARK_DEFAULT"
 # =============================================================================
 # apply_optional_patch "wolplus translation" . 1 \
 # 	"$PATCH_DIR/wolplus/001-luci-app-wolplus-edit-po.patch"
-
-# =============================================================================
-# 暂未启用：Firewall3 固件加入 nlbwmon
-# =============================================================================
-# if grep -q '^CONFIG_PACKAGE_firewall4=n$' ./.config; then
-# 	echo 'CONFIG_PACKAGE_luci-app-nlbwmon=y' >> ./.config
-# fi
 
 # =============================================================================
 # 暂未启用：删除 DDNS init 中的 boot() 函数

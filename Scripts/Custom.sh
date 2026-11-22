@@ -102,7 +102,7 @@ if [ -f "$FRPC_INIT" ]; then
 			-e 's/env conf_inc/env conf_inc enable/g' \
 			-e "s/'conf_inc:list(string)'/& \\\\/" \
 			-e "/conf_inc:list/a\\\t\t'enable:bool:0'" \
-			-e '/procd_open_instance/i\t[ "$enable" -ne 1 ] \&\& return 1\n' \
+			-e '/procd_open_instance/i\    [ "$enable" -ne 1 ] && return 1' \
 			"$FRPC_INIT"
 	fi
 fi
