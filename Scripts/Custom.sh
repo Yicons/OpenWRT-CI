@@ -219,8 +219,7 @@ EOF
 chmod 0755 "$NGINX_DEFAULTS_DIR/50-nginx-http"
 
 cat > "$NGINX_CONF_DIR/99-router-defaults.locations" <<'EOF'
-# 路由器管理页面允许大文件上传，并给 LuCI/uWSGI 留出足够执行时间。
-client_max_body_size 0;
+# QuickFile 已声明上传大小不限；此处仅设置 LuCI/uWSGI 超时，避免重复声明。
 uwsgi_connect_timeout 300s;
 uwsgi_send_timeout 300s;
 uwsgi_read_timeout 300s;
