@@ -142,8 +142,9 @@ then
 elif package_enabled CONFIG_PACKAGE_luci-app-homeproxy; then
 	find feeds/luci feeds/packages package -mindepth 1 -maxdepth 4 \
 		-type d -name "sing-box" -prune -exec rm -rf {} + 2>/dev/null
+	# master 的 sing-box 默认启用 Naive outbound，需要同源 libcronet。
 	sparse_packages master https://github.com/immortalwrt/packages package \
-		net/sing-box || return 1
+		libs/libcronet net/sing-box || return 1
 fi
 
 if [[ $WRT_REPO == *"openwrt/openwrt"* ]]; then
