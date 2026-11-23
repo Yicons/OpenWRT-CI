@@ -255,7 +255,22 @@ jobs:
       - name: Clone Code
         id: clone-code
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+          for ATTEMPT in 1 2 3; do
+            echo "Clone source: attempt $ATTEMPT/3"
+            if git clone --depth=1 --single-branch --branch "$WRT_BRANCH" "$WRT_REPO" ./wrt/; then
+              break
+            else
+              CLONE_STATUS=$?
+            fi
+
+            if [ "$ATTEMPT" -eq 3 ]; then
+              echo "Source clone failed after 3 attempts (exit $CLONE_STATUS)." >&2
+              exit "$CLONE_STATUS"
+            fi
+
+            echo "Source clone failed (exit $CLONE_STATUS); retrying in 15 seconds."
+            sleep 15
+          done
 
           cd ./wrt/
           WRT_HASH=$(git rev-parse HEAD)

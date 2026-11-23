@@ -194,6 +194,10 @@ fi
 
 # 官方 Nginx/uWSGI：保持现有 HTTP 80 访问方式，上传不限大小，LuCI 请求超时统一为 300 秒。
 # 通过 base-files 覆盖首次启动配置，不修改 feeds/packages 中的 Nginx 源码，便于继续跟随上游。
+# default-settings 依赖 luci 会重新选中 luci-light/uhttpd；改用已选择的 luci-nginx。
+find "$PACKAGE_PATH" "$FEEDS_PATH" -type f -path '*/default-settings/Makefile' \
+	-exec sed -i 's/DEPENDS:=+luci$/DEPENDS:=+luci-nginx/' {} +
+
 NGINX_DEFAULTS_DIR="$PACKAGE_PATH/base-files/files/etc/uci-defaults"
 NGINX_CONF_DIR="$PACKAGE_PATH/base-files/files/etc/nginx/conf.d"
 mkdir -p "$NGINX_DEFAULTS_DIR" "$NGINX_CONF_DIR"
