@@ -108,6 +108,17 @@ sparse_packages() {
 	done
 }
 
+# VIK main 的旧核心未接收 libffi 迁移；缺包时补入官方实现，已有则保留上游。
+if [[ $WRT_REPO == *"VIKINGYFY/immortalwrt"* && $WRT_BRANCH == "main" ]]; then
+	if find package feeds -type f -path '*/libffi/Makefile' -print -quit | grep -q .; then
+		echo "VIK libffi: already provided by source or feeds; skipping compatibility fix"
+	else
+		echo "VIK libffi: missing; importing from ImmortalWrt core"
+		sparse_packages master https://github.com/immortalwrt/immortalwrt package \
+			package/libs/libffi || return 1
+	fi
+fi
+
 sparse_packages main https://github.com/sbwml/openwrt_pkgs package \
 	luci-app-socat luci-app-eqos luci-app-vlmcsd vlmcsd || return 1
 
